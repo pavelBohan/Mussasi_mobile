@@ -318,6 +318,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingBottom: 100,
   },
   weekOverview: {
     backgroundColor: 'white',

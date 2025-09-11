@@ -61,62 +61,65 @@ const GradientButton = ({ colors, onPress, children, style, textStyle }) => (
 // Тестовые данные
 const testData = {
   "metadata": {
-    "version": "1.0",
-    "created": "2025-09-09T05:57:05Z",
-    "type": "zoj_daily_plan",
-    "user": "student_diabetes_1",
-    "date": "2025-09-09",
-    "day_type": "weekday"
+    "version": "2.0",
+    "type": "zoj_4.0_daily_plan",
+    "user": "student_zoj_1",
+    "date": "2025-09-11",
   },
   "blocks": [
     {
-      "id": "glucose_tuesday",
-      "type": "tracker", 
-      "title": "Контроль глюкозы",
-      "icon": "📊",
+      "id": "mental_20250911",
+      "type": "mental",
+      "title": "Ментальное здоровье",
+      "icon": "🧠",
       "data": {
-        "target_range": [4.0, 8.0],
-        "unit": "ммоль/л",
-        "measurements": [
-          {"time": "07:00", "value": null, "note": "Натощак"},
-          {"time": "10:00", "value": null, "note": "После завтрака"},
-          {"time": "12:30", "value": null, "note": "Перед обедом"},
-          {"time": "16:00", "value": null, "note": "Полдник"},
-          {"time": "21:30", "value": null, "note": "Перед сном"}
+        "mood_score": 8,
+        "tasks": [
+          {"id": "meditation", "text": "Утренняя медитация", "completed": true},
+          {"id": "journal", "text": "Ведение дневника", "completed": false},
+          {"id": "no_social", "text": "Час без соцсетей", "completed": true}
         ]
       }
     },
     {
-      "id": "tuesday_goals",
-      "type": "checklist",
-      "title": "Цели дня",
-      "icon": "🎯", 
+      "id": "nutrition_20250911",
+      "type": "nutrition", 
+      "title": "Питание",
+      "icon": "🍎",
       "data": {
-        "items": [
-          {"id": "biomachine_express", "text": "Зарядка BIOMACHINE (экспресс)", "completed": false, "xp": 30},
-          {"id": "university_attendance", "text": "Посещение всех пар", "completed": false, "xp": 40},
-          {"id": "volleyball_training", "text": "Тренировка по волейболу", "completed": false, "xp": 45},
-          {"id": "glucose_stable", "text": "Стабильная глюкоза", "completed": false, "xp": 25},
-          {"id": "pre_workout_snack", "text": "Перекус перед тренировкой", "completed": false, "xp": 15}
-        ]
+        "total_calories": 1850,
+        "target_calories": 2200,
+        "protein_g": 120,
+        "carbs_g": 200,
+        "fats_g": 60
       }
     },
     {
-      "id": "meals_tuesday",
-      "type": "form",
-      "title": "Питание и инсулин", 
-      "icon": "🍽️",
+      "id": "movement_20250911",
+      "type": "movement",
+      "title": "Движение", 
+      "icon": "🏃",
       "data": {
-        "meals": [
-          {"time": "08:00", "type": "Завтрак", "food": "", "carbs": null, "insulin": null, "notes": ""},
-          {"time": "12:30", "type": "Обед", "food": "", "carbs": null, "insulin": null, "notes": ""},
-          {"time": "17:30", "type": "Перекус", "food": "", "carbs": null, "insulin": null, "notes": "Перед волейболом"},
-          {"time": "21:00", "type": "Ужин", "food": "", "carbs": null, "insulin": null, "notes": "После тренировки"}
-        ]
+        "active_minutes": 75,
+        "steps": 12540,
+        "target_steps": 10000,
+        "workout_type": "Волейбол"
+      }
+    },
+    {
+      "id": "recovery_20250911",
+      "type": "recovery",
+      "title": "Восстановление",
+      "icon": "🌙", 
+      "data": {
+        "sleep_hours": 7.5,
+        "sleep_quality": 85,
+        "stress_level": 3
       }
     }
   ]
 };
+
 
 export default function App() {
   const [blocks, setBlocks] = useState(testData.blocks);
@@ -319,6 +322,8 @@ export default function App() {
       return <StatsScreen />;
     case 'settings':
       return <SettingsScreen />;
+    case 'stats':
+      return <StatsScreen blocks={blocks} />
     default:
       return renderHomeContent();
   }
@@ -566,7 +571,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingBottom: 120,
   },
   actionsContainer: {
     paddingHorizontal: 20,
