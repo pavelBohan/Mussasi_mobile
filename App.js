@@ -383,7 +383,7 @@ if (isLoading) {
 
   return (
   <View style={styles.container}>
-    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
       {renderActiveScreen()}
     </ScrollView>
 
@@ -571,6 +571,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingBottom: 100,
   },
   actionsContainer: {
     paddingHorizontal: 20,
