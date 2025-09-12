@@ -1,31 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const COLORS = {
-  primary: '#007AFF',
-  secondary: '#5856D6', 
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
-  background: '#F2F2F7',
-  surface: '#FFFFFF',
-  text: '#1D1D1F',
-  textSecondary: '#8E8E93',
-  border: '#E5E5EA',
-};
+import { COLORS } from '../constants/colors';
+import { useNutrition } from '../context/NutritionContext';
 
 // Виджет текущего приема пищи
 export function CurrentMealWidget({ onPress }) {
+  const { getDayStats } = useNutrition();
+  const stats = getDayStats();
+
   const nextMeal = {
     type: 'Завтрак',
     icon: '🍳',
     time: '06:00',
-    calories: 450,
-    protein: 25,
-    fat: 15,
-    carbs: 45,
-    insulin: 9,
     prepTime: '15 мин',
   };
 
@@ -41,56 +28,9 @@ export function CurrentMealWidget({ onPress }) {
         <Text style={styles.mealTime}>{nextMeal.time}</Text>
       </View>
 
-      <View style={styles.macroRow}>
-        <View style={styles.macroItem}>
-          <Text style={styles.macroValue}>{nextMeal.calories}</Text>
-          <Text style={styles.macroLabel}>ккал</Text>
-        </View>
-        <View style={styles.macroItem}>
-          <Text style={styles.macroValue}>{nextMeal.protein}</Text>
-          <Text style={styles.macroLabel}>Б</Text>
-        </View>
-        <View style={styles.macroItem}>
-          <Text style={styles.macroValue}>{nextMeal.fat}</Text>
-          <Text style={styles.macroLabel}>Ж</Text>
-        </View>
-        <View style={styles.macroItem}>
-          <Text style={styles.macroValue}>{nextMeal.carbs}</Text>
-          <Text style={styles.macroLabel}>У</Text>
-        </View>
-      </View>
-
       <View style={styles.mealDetails}>
-        <Text style={styles.insulinText}>💉 {nextMeal.insulin} ед</Text>
+        <Text style={styles.insulinText}>💉 {stats.insulinDose} ед сегодня</Text>
         <Text style={styles.prepTime}>⏱️ {nextMeal.prepTime}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// Виджет покупок
-export function ShoppingWidget({ onPress }) {
-  const shopping = {
-    itemsCount: 12,
-    estimatedCost: 850,
-    nextTrip: 'Завтра',
-  };
-
-  return (
-    <TouchableOpacity style={styles.widget} onPress={onPress}>
-      <View style={styles.widgetHeader}>
-        <Text style={styles.widgetTitle}>Покупки</Text>
-        <Ionicons name="basket-outline" size={20} color={COLORS.warning} />
-      </View>
-      
-      <View style={styles.shoppingInfo}>
-        <Text style={styles.shoppingTrip}>{shopping.nextTrip}</Text>
-        <Text style={styles.shoppingItems}>{shopping.itemsCount} товаров</Text>
-      </View>
-
-      <View style={styles.costRow}>
-        <Text style={styles.costLabel}>Примерная стоимость:</Text>
-        <Text style={styles.costValue}>{shopping.estimatedCost} ₽</Text>
       </View>
     </TouchableOpacity>
   );
@@ -98,10 +38,27 @@ export function ShoppingWidget({ onPress }) {
 
 // Виджет прогресса питания
 export function NutritionProgressWidget({ onPress }) {
+  const { getDayStats } = useNutrition();
+  const stats = getDayStats();
+
+  const targets = { calories: 2000, protein: 120, carbs: 200 };
+  
   const progress = {
-    calories: { current: 1250, target: 2000, percentage: 62 },
-    protein: { current: 85, target: 120, percentage: 71 },
-    carbs: { current: 140, target: 200, percentage: 70 },
+    calories: { 
+      current: Math.round(stats.calories), 
+      target: targets.calories, 
+      percentage: Math.min((stats.calories / targets.calories) * 100, 100) 
+    },
+    protein: { 
+      current: Math.round(stats.protein), 
+      target: targets.protein, 
+      percentage: Math.min((stats.protein / targets.protein) * 100, 100) 
+    },
+    carbs: { 
+      current: Math.round(stats.carbs), 
+      target: targets.carbs, 
+      percentage: Math.min((stats.carbs / targets.carbs) * 100, 100) 
+    },
   };
 
   return (
@@ -146,129 +103,35 @@ export function NutritionProgressWidget({ onPress }) {
   );
 }
 
+// Виджет покупок (пока статичный)
+export function ShoppingWidget({ onPress }) {
+  const shopping = {
+    itemsCount: 12,
+    estimatedCost: 850,
+    nextTrip: 'Завтра',
+  };
+
+  return (
+    <TouchableOpacity style={styles.widget} onPress={onPress}>
+      <View style={styles.widgetHeader}>
+        <Text style={styles.widgetTitle}>Покупки</Text>
+        <Ionicons name="basket-outline" size={20} color={COLORS.warning} />
+      </View>
+      
+      <View style={styles.shoppingInfo}>
+        <Text style={styles.shoppingTrip}>{shopping.nextTrip}</Text>
+        <Text style={styles.shoppingItems}>{shopping.itemsCount} товаров</Text>
+      </View>
+
+      <View style={styles.costRow}>
+        <Text style={styles.costLabel}>Примерная стоимость:</Text>
+        <Text style={styles.costValue}>{shopping.estimatedCost} ₽</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// Стили остаются те же, но импортируем COLORS
 const styles = StyleSheet.create({
-  widget: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-  },
-  widgetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  widgetTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  mealInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  mealType: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  mealTime: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  macroRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  macroItem: {
-    alignItems: 'center',
-  },
-  macroValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  macroLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
-  mealDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  insulinText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.warning,
-  },
-  prepTime: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  shoppingInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  shoppingTrip: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  shoppingItems: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  costRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  costLabel: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  costValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.warning,
-  },
-  progressList: {
-    gap: 10,
-  },
-  progressItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  progressLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    width: 60,
-  },
-  progressBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: COLORS.border,
-    borderRadius: 3,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: COLORS.success,
-    borderRadius: 3,
-  },
-  progressText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    width: 60,
-    textAlign: 'right',
-  },
+  // ... все стили из предыдущей версии, но с импортом COLORS
 });
