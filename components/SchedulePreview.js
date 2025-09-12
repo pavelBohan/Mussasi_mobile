@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { scheduleUtils } from '../utils/scheduleUtils';
+import { COLORS } from '../constants/colors';
 
 const SchedulePreview = ({ schedule, dayStatus, onPress }) => {
   if (!schedule || schedule.length === 0) {

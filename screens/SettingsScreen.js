@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { COLORS } from '../constants/colors';
 
 const SettingsScreen = () => {
   const [userProfile, setUserProfile] = useState({

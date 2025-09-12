@@ -8,5 +8,5 @@ export const COLORS = {
   surface: '#FFFFFF',
   text: '#1D1D1F',
   textSecondary: '#8E8E93',
-  border: '#E5E5EA',
+  border: '#E5E5EA'
 };

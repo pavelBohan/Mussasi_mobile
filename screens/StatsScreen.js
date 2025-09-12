@@ -1,22 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const COLORS = {
-  primary: '#007AFF',
-  secondary: '#5856D6',
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
-  background: '#F2F2F7',
-  surface: '#FFFFFF',
-  text: '#1D1D1F',
-  textSecondary: '#8E8E93',
-  mental: '#5AC8FA',
-  nutrition: '#FF9500',
-  movement: '#FF2D55',
-  recovery: '#5856D6',
-};
+import { COLORS } from '../constants/colors'; // ← ДОБАВИТЬ ЭТО
 
 // Вспомогательный компонент для карточки статистики
 const StatCard = ({ icon, title, color, children }) => (

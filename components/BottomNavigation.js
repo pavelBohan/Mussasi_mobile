@@ -7,6 +7,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 

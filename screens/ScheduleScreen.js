@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { scheduleData } from '../data/scheduleData';
 import { scheduleUtils } from '../utils/scheduleUtils';
+import { COLORS } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 

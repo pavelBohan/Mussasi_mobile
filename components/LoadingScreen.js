@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '../constants/colors';
 
 const LoadingScreen = ({ onLoadingComplete }) => {
   const fadeAnim = new Animated.Value(0);
