@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,21 +11,10 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/colors';
+import { useNutrition } from '../context/NutritionContext';
 
-const COLORS = {
-  primary: '#007AFF',
-  secondary: '#5856D6', 
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
-  background: '#F2F2F7',
-  surface: '#FFFFFF',
-  text: '#1D1D1F',
-  textSecondary: '#8E8E93',
-  border: '#E5E5EA',
-};
-
-// Минимальная база продуктов (на 100г)
+// База продуктов (на 100г)
 const FOOD_DATABASE = [
   { id: 1, name: 'Гречка вареная', calories: 132, protein: 4.5, fat: 2.3, carbs: 25.0 },
   { id: 2, name: 'Рис вареный', calories: 116, protein: 2.2, fat: 0.5, carbs: 22.9 },
@@ -58,30 +47,25 @@ const MEAL_TYPES = [
 ];
 
 export default function NutritionScreen() {
-  const [meals, setMeals] = useState([]);
+  // Используем контекст вместо локального состояния
+  const { meals, addMeal, deleteMeal, getDayStats } = useNutrition();
+  
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState(null);
   const [selectedFood, setSelectedFood] = useState(null);
   const [foodAmount, setFoodAmount] = useState('100');
   const [showFoodPicker, setShowFoodPicker] = useState(false);
 
-  // Расчет дневной статистики
-  const getDayStats = () => {
-    const totals = meals.reduce((acc, meal) => {
-      acc.calories += meal.calories;
-      acc.protein += meal.protein;
-      acc.fat += meal.fat;
-      acc.carbs += meal.carbs;
-      return acc;
-    }, { calories: 0, protein: 0, fat: 0, carbs: 0 });
+  // Получаем статистику из контекста
+  const dayStats = getDayStats();
 
-    // Расчет инсулина (1 ед на 5г углеводов)
-    const insulinDose = Math.round(totals.carbs / 5);
+  // Фильтруем приемы пищи за сегодня
+  const today = new Date().toDateString();
+  const todayMeals = meals.filter(meal => 
+    new Date(meal.timestamp).toDateString() === today
+  );
 
-    return { ...totals, insulinDose };
-  };
-
-  const addMeal = () => {
+  const handleAddMeal = () => {
     if (!selectedMealType || !selectedFood || !foodAmount) {
       Alert.alert('Ошибка', 'Заполните все поля');
       return;
@@ -91,18 +75,17 @@ export default function NutritionScreen() {
     const multiplier = amount / 100;
 
     const meal = {
-      id: Date.now(),
-      type: selectedMealType,
+      type: selectedMealType.id,
       food: selectedFood,
       amount: amount,
       calories: Math.round(selectedFood.calories * multiplier),
       protein: Math.round(selectedFood.protein * multiplier * 10) / 10,
       fat: Math.round(selectedFood.fat * multiplier * 10) / 10,
       carbs: Math.round(selectedFood.carbs * multiplier * 10) / 10,
-      timestamp: new Date(),
     };
 
-    setMeals([...meals, meal]);
+    // Используем функцию из контекста
+    addMeal(meal);
     
     // Сброс формы
     setSelectedMealType(null);
@@ -110,12 +93,6 @@ export default function NutritionScreen() {
     setFoodAmount('100');
     setShowAddMeal(false);
   };
-
-  const deleteMeal = (mealId) => {
-    setMeals(meals.filter(meal => meal.id !== mealId));
-  };
-
-  const dayStats = getDayStats();
 
   return (
     <View style={styles.container}>
@@ -162,12 +139,12 @@ export default function NutritionScreen() {
         {/* Список приемов пищи */}
         <View style={styles.mealsSection}>
           <Text style={styles.sectionTitle}>Приемы пищи</Text>
-          {meals.length === 0 ? (
+          {todayMeals.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>Добавьте первый прием пищи</Text>
             </View>
           ) : (
-            meals.map((meal) => (
+            todayMeals.map((meal) => (
               <View key={meal.id} style={styles.mealCard}>
                 <View style={styles.mealHeader}>
                   <Text style={styles.mealType}>
@@ -204,7 +181,7 @@ export default function NutritionScreen() {
               <Text style={styles.modalCancel}>Отмена</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Добавить прием пищи</Text>
-            <TouchableOpacity onPress={addMeal}>
+            <TouchableOpacity onPress={handleAddMeal}>
               <Text style={styles.modalSave}>Сохранить</Text>
             </TouchableOpacity>
           </View>
