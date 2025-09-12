@@ -8,110 +8,117 @@ import {
   TextInput,
   Alert,
   Modal,
-  FlatList,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../constants/colors';
 import { useNutrition } from '../context/NutritionContext';
+import { COLORS } from '../constants/colors';
 
-// База продуктов (на 100г)
 const FOOD_DATABASE = [
-  { id: 1, name: 'Гречка вареная', calories: 132, protein: 4.5, fat: 2.3, carbs: 25.0 },
-  { id: 2, name: 'Рис вареный', calories: 116, protein: 2.2, fat: 0.5, carbs: 22.9 },
-  { id: 3, name: 'Куриная грудка', calories: 165, protein: 31.0, fat: 3.6, carbs: 0 },
-  { id: 4, name: 'Яйцо куриное', calories: 157, protein: 12.7, fat: 11.5, carbs: 0.7 },
-  { id: 5, name: 'Творог 5%', calories: 121, protein: 17.2, fat: 5.0, carbs: 1.8 },
-  { id: 6, name: 'Молоко 2.5%', calories: 52, protein: 2.8, fat: 2.5, carbs: 4.7 },
-  { id: 7, name: 'Хлеб черный', calories: 214, protein: 6.6, fat: 1.2, carbs: 40.7 },
-  { id: 8, name: 'Банан', calories: 96, protein: 1.5, fat: 0.2, carbs: 21.0 },
-  { id: 9, name: 'Яблоко', calories: 47, protein: 0.4, fat: 0.4, carbs: 9.8 },
-  { id: 10, name: 'Овсянка на воде', calories: 88, protein: 3.0, fat: 1.7, carbs: 15.0 },
-  { id: 11, name: 'Макароны вареные', calories: 112, protein: 3.5, fat: 0.4, carbs: 23.0 },
-  { id: 12, name: 'Картофель вареный', calories: 82, protein: 2.0, fat: 0.4, carbs: 16.3 },
-  { id: 13, name: 'Говядина', calories: 187, protein: 18.9, fat: 12.4, carbs: 0 },
-  { id: 14, name: 'Рыба (судак)', calories: 84, protein: 18.4, fat: 1.1, carbs: 0 },
-  { id: 15, name: 'Масло подсолнечное', calories: 899, protein: 0, fat: 99.9, carbs: 0 },
-  { id: 16, name: 'Огурец', calories: 15, protein: 0.8, fat: 0.1, carbs: 2.5 },
-  { id: 17, name: 'Помидор', calories: 20, protein: 0.6, fat: 0.2, carbs: 4.2 },
-  { id: 18, name: 'Морковь', calories: 35, protein: 1.3, fat: 0.1, carbs: 6.9 },
-  { id: 19, name: 'Капуста белокочанная', calories: 27, protein: 1.8, fat: 0.1, carbs: 4.7 },
-  { id: 20, name: 'Кефир 2.5%', calories: 51, protein: 3.0, fat: 2.5, carbs: 4.0 },
-];
-
-const MEAL_TYPES = [
-  { id: 'breakfast', name: 'Завтрак', icon: '🍳', time: '06:00' },
-  { id: 'snack1', name: 'Перекус', icon: '🥨', time: '11:00' },
-  { id: 'lunch', name: 'Обед', icon: '🍽️', time: '13:00' },
-  { id: 'snack2', name: 'Перекус', icon: '🍎', time: '17:00' },
-  { id: 'dinner', name: 'Ужин', icon: '🍲', time: '19:00' },
+  { name: 'Овсянка', calories: 68, protein: 2.4, fat: 1.4, carbs: 12, per: '100г' },
+  { name: 'Куриная грудка', calories: 165, protein: 31, fat: 3.6, carbs: 0, per: '100г' },
+  { name: 'Рис', calories: 130, protein: 2.7, fat: 0.3, carbs: 28, per: '100г' },
+  { name: 'Банан', calories: 89, protein: 1.1, fat: 0.3, carbs: 23, per: '1 шт' },
+  { name: 'Яйцо', calories: 155, protein: 13, fat: 11, carbs: 1.1, per: '1 шт' },
+  { name: 'Хлеб', calories: 265, protein: 9, fat: 3.2, carbs: 49, per: '100г' },
+  { name: 'Молоко', calories: 42, protein: 3.4, fat: 1, carbs: 4.8, per: '100мл' },
+  { name: 'Яблоко', calories: 52, protein: 0.3, fat: 0.2, carbs: 14, per: '1 шт' },
 ];
 
 export default function NutritionScreen() {
-  // Используем контекст вместо локального состояния
   const { meals, addMeal, deleteMeal, getDayStats } = useNutrition();
-  
-  const [showAddMeal, setShowAddMeal] = useState(false);
-  const [selectedMealType, setSelectedMealType] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
-  const [foodAmount, setFoodAmount] = useState('100');
-  const [showFoodPicker, setShowFoodPicker] = useState(false);
+  const [quantity, setQuantity] = useState('1');
+  const [mealType, setMealType] = useState('breakfast');
 
-  // Получаем статистику из контекста
   const dayStats = getDayStats();
 
-  // Фильтруем приемы пищи за сегодня
-  const today = new Date().toDateString();
-  const todayMeals = meals.filter(meal => 
-    new Date(meal.timestamp).toDateString() === today
-  );
-
   const handleAddMeal = () => {
-    if (!selectedMealType || !selectedFood || !foodAmount) {
-      Alert.alert('Ошибка', 'Заполните все поля');
+    if (!selectedFood || !quantity) {
+      Alert.alert('Ошибка', 'Выберите продукт и укажите количество');
       return;
     }
 
-    const amount = parseFloat(foodAmount);
-    const multiplier = amount / 100;
-
+    const multiplier = parseFloat(quantity);
     const meal = {
-      type: selectedMealType.id,
-      food: selectedFood,
-      amount: amount,
-      calories: Math.round(selectedFood.calories * multiplier),
-      protein: Math.round(selectedFood.protein * multiplier * 10) / 10,
-      fat: Math.round(selectedFood.fat * multiplier * 10) / 10,
-      carbs: Math.round(selectedFood.carbs * multiplier * 10) / 10,
+      id: Date.now().toString(),
+      name: selectedFood.name,
+      quantity: multiplier,
+      unit: selectedFood.per,
+      calories: selectedFood.calories * multiplier,
+      protein: selectedFood.protein * multiplier,
+      fat: selectedFood.fat * multiplier,
+      carbs: selectedFood.carbs * multiplier,
+      type: mealType,
+      timestamp: new Date().toISOString(),
     };
 
-    // Используем функцию из контекста
     addMeal(meal);
-    
-    // Сброс формы
-    setSelectedMealType(null);
+    setModalVisible(false);
     setSelectedFood(null);
-    setFoodAmount('100');
-    setShowAddMeal(false);
+    setQuantity('1');
   };
+
+  const renderMealTypeButton = (type, label) => (
+    <TouchableOpacity
+      style={[
+        styles.mealTypeButton,
+        mealType === type && styles.mealTypeButtonActive
+      ]}
+      onPress={() => setMealType(type)}
+    >
+      <Text style={[
+        styles.mealTypeText,
+        mealType === type && styles.mealTypeTextActive
+      ]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderFoodItem = (food) => (
+    <TouchableOpacity
+      key={food.name}
+      style={[
+        styles.foodItem,
+        selectedFood?.name === food.name && styles.foodItemSelected
+      ]}
+      onPress={() => setSelectedFood(food)}
+    >
+      <Text style={styles.foodName}>{food.name}</Text>
+      <Text style={styles.foodDetails}>
+        {food.calories} ккал | Б: {food.protein}г | Ж: {food.fat}г | У: {food.carbs}г
+      </Text>
+      <Text style={styles.foodPortion}>на {food.per}</Text>
+    </TouchableOpacity>
+  );
+
+  const renderMeal = (meal) => (
+    <View key={meal.id} style={styles.mealItem}>
+      <View style={styles.mealHeader}>
+        <Text style={styles.mealName}>{meal.name}</Text>
+        <TouchableOpacity
+          onPress={() => deleteMeal(meal.id)}
+          style={styles.deleteButton}
+        >
+          <Text style={styles.deleteText}>×</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.mealDetails}>
+        {meal.quantity} {meal.unit} | {Math.round(meal.calories)} ккал
+      </Text>
+      <Text style={styles.mealMacros}>
+        Б: {meal.protein.toFixed(1)}г | Ж: {meal.fat.toFixed(1)}г | У: {meal.carbs.toFixed(1)}г
+      </Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Заголовок */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Питание</Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setShowAddMeal(true)}
-        >
-          <Ionicons name="add" size={24} color={COLORS.surface} />
-        </TouchableOpacity>
-      </View>
-
       <ScrollView style={styles.content}>
-        {/* Дневная статистика */}
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Сегодня</Text>
-          <View style={styles.statsRow}>
+        {/* Статистика дня */}
+        <View style={styles.statsContainer}>
+          <Text style={styles.sectionTitle}>Статистика дня</Text>
+          <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{Math.round(dayStats.calories)}</Text>
               <Text style={styles.statLabel}>ккал</Text>
@@ -129,165 +136,78 @@ export default function NutritionScreen() {
               <Text style={styles.statLabel}>углеводы</Text>
             </View>
           </View>
-          <View style={styles.insulinRow}>
+          <View style={styles.insulinContainer}>
             <Text style={styles.insulinText}>
-              💉 Инсулин: {dayStats.insulinDose} ед
+              Инсулин: {Math.round(dayStats.carbs / 5)} ед
             </Text>
           </View>
         </View>
 
         {/* Список приемов пищи */}
-        <View style={styles.mealsSection}>
+        <View style={styles.mealsContainer}>
           <Text style={styles.sectionTitle}>Приемы пищи</Text>
-          {todayMeals.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Добавьте первый прием пищи</Text>
-            </View>
+          {meals.length === 0 ? (
+            <Text style={styles.emptyText}>Нет записей о питании</Text>
           ) : (
-            todayMeals.map((meal) => (
-              <View key={meal.id} style={styles.mealCard}>
-                <View style={styles.mealHeader}>
-                  <Text style={styles.mealType}>
-                    {MEAL_TYPES.find(t => t.id === meal.type)?.icon} {MEAL_TYPES.find(t => t.id === meal.type)?.name}
-                  </Text>
-                  <TouchableOpacity onPress={() => deleteMeal(meal.id)}>
-                    <Ionicons name="trash-outline" size={20} color={COLORS.danger} />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.mealFood}>
-                  {meal.food.name} - {meal.amount}г
-                </Text>
-                <View style={styles.mealStats}>
-                  <Text style={styles.mealStat}>{meal.calories} ккал</Text>
-                  <Text style={styles.mealStat}>Б: {meal.protein}</Text>
-                  <Text style={styles.mealStat}>Ж: {meal.fat}</Text>
-                  <Text style={styles.mealStat}>У: {meal.carbs}</Text>
-                </View>
-              </View>
-            ))
+            meals.map(renderMeal)
           )}
         </View>
       </ScrollView>
 
-      {/* Модальное окно добавления приема пищи */}
+      {/* Кнопка добавления */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={styles.addButtonText}>+ Добавить прием пищи</Text>
+      </TouchableOpacity>
+
+      {/* Модальное окно добавления */}
       <Modal
-        visible={showAddMeal}
+        visible={modalVisible}
         animationType="slide"
         presentationStyle="pageSheet"
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowAddMeal(false)}>
-              <Text style={styles.modalCancel}>Отмена</Text>
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelButton}>Отмена</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Добавить прием пищи</Text>
             <TouchableOpacity onPress={handleAddMeal}>
-              <Text style={styles.modalSave}>Сохранить</Text>
+              <Text style={styles.saveButton}>Сохранить</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
-            {/* Выбор типа приема пищи */}
-            <Text style={styles.fieldLabel}>Тип приема пищи</Text>
-            <View style={styles.mealTypeGrid}>
-              {MEAL_TYPES.map((type) => (
-                <TouchableOpacity
-                  key={type.id}
-                  style={[
-                    styles.mealTypeButton,
-                    selectedMealType?.id === type.id && styles.mealTypeButtonSelected
-                  ]}
-                  onPress={() => setSelectedMealType(type)}
-                >
-                  <Text style={styles.mealTypeIcon}>{type.icon}</Text>
-                  <Text style={styles.mealTypeName}>{type.name}</Text>
-                  <Text style={styles.mealTypeTime}>{type.time}</Text>
-                </TouchableOpacity>
-              ))}
+            {/* Тип приема пищи */}
+            <Text style={styles.sectionTitle}>Тип приема пищи</Text>
+            <View style={styles.mealTypeContainer}>
+              {renderMealTypeButton('breakfast', 'Завтрак')}
+              {renderMealTypeButton('lunch', 'Обед')}
+              {renderMealTypeButton('dinner', 'Ужин')}
+              {renderMealTypeButton('snack', 'Перекус')}
             </View>
 
             {/* Выбор продукта */}
-            <Text style={styles.fieldLabel}>Продукт</Text>
-            <TouchableOpacity
-              style={styles.foodSelector}
-              onPress={() => setShowFoodPicker(true)}
-            >
-              <Text style={[styles.foodSelectorText, !selectedFood && styles.placeholder]}>
-                {selectedFood ? selectedFood.name : 'Выберите продукт'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color={COLORS.textSecondary} />
-            </TouchableOpacity>
+            <Text style={styles.sectionTitle}>Выберите продукт</Text>
+            {FOOD_DATABASE.map(renderFoodItem)}
 
             {/* Количество */}
-            <Text style={styles.fieldLabel}>Количество (г)</Text>
-            <TextInput
-              style={styles.amountInput}
-              value={foodAmount}
-              onChangeText={setFoodAmount}
-              keyboardType="numeric"
-              placeholder="100"
-            />
-
-            {/* Предварительный расчет */}
-            {selectedFood && foodAmount && (
-              <View style={styles.previewCard}>
-                <Text style={styles.previewTitle}>Пищевая ценность</Text>
-                <View style={styles.previewStats}>
-                  <Text style={styles.previewStat}>
-                    Калории: {Math.round(selectedFood.calories * parseFloat(foodAmount) / 100)} ккал
-                  </Text>
-                  <Text style={styles.previewStat}>
-                    Белки: {(selectedFood.protein * parseFloat(foodAmount) / 100).toFixed(1)} г
-                  </Text>
-                  <Text style={styles.previewStat}>
-                    Жиры: {(selectedFood.fat * parseFloat(foodAmount) / 100).toFixed(1)} г
-                  </Text>
-                  <Text style={styles.previewStat}>
-                    Углеводы: {(selectedFood.carbs * parseFloat(foodAmount) / 100).toFixed(1)} г
-                  </Text>
-                  <Text style={styles.previewInsulin}>
-                    💉 Инсулин: {Math.round(selectedFood.carbs * parseFloat(foodAmount) / 100 / 5)} ед
-                  </Text>
-                </View>
+            {selectedFood && (
+              <View style={styles.quantityContainer}>
+                <Text style={styles.sectionTitle}>Количество</Text>
+                <TextInput
+                  style={styles.quantityInput}
+                  value={quantity}
+                  onChangeText={setQuantity}
+                  keyboardType="numeric"
+                  placeholder="1"
+                />
+                <Text style={styles.quantityUnit}>{selectedFood.per}</Text>
               </View>
             )}
           </ScrollView>
-        </View>
-      </Modal>
-
-      {/* Модальное окно выбора продукта */}
-      <Modal
-        visible={showFoodPicker}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowFoodPicker(false)}>
-              <Text style={styles.modalCancel}>Отмена</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Выбор продукта</Text>
-            <View style={{ width: 60 }} />
-          </View>
-
-          <FlatList
-            data={FOOD_DATABASE}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.foodItem}
-                onPress={() => {
-                  setSelectedFood(item);
-                  setShowFoodPicker(false);
-                }}
-              >
-                <Text style={styles.foodName}>{item.name}</Text>
-                <Text style={styles.foodStats}>
-                  {item.calories} ккал | Б: {item.protein} Ж: {item.fat} У: {item.carbs}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
         </View>
       </Modal>
     </View>
@@ -299,122 +219,111 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: COLORS.surface,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  addButton: {
-    backgroundColor: COLORS.primary,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    padding: 16,
   },
-  statsCard: {
+  statsContainer: {
     backgroundColor: COLORS.surface,
     borderRadius: 12,
-    padding: 20,
-    marginTop: 20,
-    marginBottom: 20,
+    padding: 16,
+    marginBottom: 16,
   },
-  statsTitle: {
+  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
-    marginBottom: 15,
+    marginBottom: 12,
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   statItem: {
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.primary,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 4,
   },
-  insulinRow: {
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+  insulinContainer: {
+    backgroundColor: COLORS.warning + '20',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
   },
   insulinText: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.warning,
-    textAlign: 'center',
   },
-  mealsSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 15,
-  },
-  emptyState: {
+  mealsContainer: {
     backgroundColor: COLORS.surface,
     borderRadius: 12,
-    padding: 40,
-    alignItems: 'center',
+    padding: 16,
   },
   emptyText: {
-    fontSize: 16,
+    textAlign: 'center',
     color: COLORS.textSecondary,
+    fontStyle: 'italic',
+    marginTop: 20,
   },
-  mealCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
+  mealItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    paddingVertical: 12,
   },
   mealHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
   },
-  mealType: {
+  mealName: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.text,
   },
-  mealFood: {
+  deleteButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteText: {
+    color: COLORS.surface,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  mealDetails: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginBottom: 8,
+    marginTop: 4,
   },
-  mealStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  mealStat: {
+  mealMacros: {
     fontSize: 12,
     color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  addButton: {
+    backgroundColor: COLORS.primary,
+    margin: 16,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: COLORS.surface,
+    fontSize: 16,
+    fontWeight: '600',
   },
   modalContainer: {
     flex: 1,
@@ -424,132 +333,88 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: COLORS.surface,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
-  },
-  modalCancel: {
-    fontSize: 16,
-    color: COLORS.danger,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
   },
-  modalSave: {
+  cancelButton: {
+    color: COLORS.textSecondary,
     fontSize: 16,
+  },
+  saveButton: {
     color: COLORS.primary,
+    fontSize: 16,
     fontWeight: '600',
   },
   modalContent: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    padding: 16,
   },
-  fieldLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 10,
-    marginTop: 20,
-  },
-  mealTypeGrid: {
+  mealTypeContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    marginBottom: 24,
   },
   mealTypeButton: {
-    width: '48%',
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
     backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 15,
-    alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  mealTypeButtonSelected: {
-    borderColor: COLORS.primary,
-  },
-  mealTypeIcon: {
-    fontSize: 24,
-    marginBottom: 5,
-  },
-  mealTypeName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 2,
-  },
-  mealTypeTime: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
-  foodSelector: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginRight: 8,
     alignItems: 'center',
   },
-  foodSelectorText: {
-    fontSize: 16,
+  mealTypeButtonActive: {
+    backgroundColor: COLORS.primary,
+  },
+  mealTypeText: {
     color: COLORS.text,
-  },
-  placeholder: {
-    color: COLORS.textSecondary,
-  },
-  amountInput: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 15,
-    fontSize: 16,
-    color: COLORS.text,
-  },
-  previewCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 15,
-    marginTop: 20,
-  },
-  previewTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 10,
-  },
-  previewStats: {
-    gap: 5,
-  },
-  previewStat: {
     fontSize: 14,
-    color: COLORS.textSecondary,
   },
-  previewInsulin: {
-    fontSize: 14,
+  mealTypeTextActive: {
+    color: COLORS.surface,
     fontWeight: '600',
-    color: COLORS.warning,
-    marginTop: 5,
   },
   foodItem: {
     backgroundColor: COLORS.surface,
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  foodItemSelected: {
+    borderWidth: 2,
+    borderColor: COLORS.primary,
   },
   foodName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: COLORS.text,
-    marginBottom: 4,
   },
-  foodStats: {
+  foodDetails: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
+  foodPortion: {
     fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  quantityContainer: {
+    marginTop: 24,
+  },
+  quantityInput: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  quantityUnit: {
+    fontSize: 14,
     color: COLORS.textSecondary,
   },
 });
