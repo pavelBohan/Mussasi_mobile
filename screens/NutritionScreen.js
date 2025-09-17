@@ -5,416 +5,463 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Alert,
-  Modal,
+  Alert
 } from 'react-native';
-import { useNutrition } from '../context/NutritionContext';
 import { COLORS } from '../constants/colors';
+import { useNutrition } from '../context/NutritionContext';
 
-const FOOD_DATABASE = [
-  { name: 'Овсянка', calories: 68, protein: 2.4, fat: 1.4, carbs: 12, per: '100г' },
-  { name: 'Куриная грудка', calories: 165, protein: 31, fat: 3.6, carbs: 0, per: '100г' },
-  { name: 'Рис', calories: 130, protein: 2.7, fat: 0.3, carbs: 28, per: '100г' },
-  { name: 'Банан', calories: 89, protein: 1.1, fat: 0.3, carbs: 23, per: '1 шт' },
-  { name: 'Яйцо', calories: 155, protein: 13, fat: 11, carbs: 1.1, per: '1 шт' },
-  { name: 'Хлеб', calories: 265, protein: 9, fat: 3.2, carbs: 49, per: '100г' },
-  { name: 'Молоко', calories: 42, protein: 3.4, fat: 1, carbs: 4.8, per: '100мл' },
-  { name: 'Яблоко', calories: 52, protein: 0.3, fat: 0.2, carbs: 14, per: '1 шт' },
-];
+const NutritionScreen = () => {
+  const {
+    dailyStats,
+    containers,
+    cookingSession,
+    activeTimers,
+    startCookingSession,
+    consumeContainer,
+    completeCookingSession
+  } = useNutrition();
+  
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-export default function NutritionScreen() {
-  const { meals, addMeal, deleteMeal, getDayStats } = useNutrition();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedFood, setSelectedFood] = useState(null);
-  const [quantity, setQuantity] = useState('1');
-  const [mealType, setMealType] = useState('breakfast');
-
-  const dayStats = getDayStats();
-
-  const handleAddMeal = () => {
-    if (!selectedFood || !quantity) {
-      Alert.alert('Ошибка', 'Выберите продукт и укажите количество');
-      return;
-    }
-
-    const multiplier = parseFloat(quantity);
-    const meal = {
-      id: Date.now().toString(),
-      name: selectedFood.name,
-      quantity: multiplier,
-      unit: selectedFood.per,
-      calories: selectedFood.calories * multiplier,
-      protein: selectedFood.protein * multiplier,
-      fat: selectedFood.fat * multiplier,
-      carbs: selectedFood.carbs * multiplier,
-      type: mealType,
-      timestamp: new Date().toISOString(),
-    };
-
-    addMeal(meal);
-    setModalVisible(false);
-    setSelectedFood(null);
-    setQuantity('1');
-  };
-
-  const renderMealTypeButton = (type, label) => (
-    <TouchableOpacity
-      style={[
-        styles.mealTypeButton,
-        mealType === type && styles.mealTypeButtonActive
-      ]}
-      onPress={() => setMealType(type)}
-    >
-      <Text style={[
-        styles.mealTypeText,
-        mealType === type && styles.mealTypeTextActive
-      ]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const renderFoodItem = (food) => (
-    <TouchableOpacity
-      key={food.name}
-      style={[
-        styles.foodItem,
-        selectedFood?.name === food.name && styles.foodItemSelected
-      ]}
-      onPress={() => setSelectedFood(food)}
-    >
-      <Text style={styles.foodName}>{food.name}</Text>
-      <Text style={styles.foodDetails}>
-        {food.calories} ккал | Б: {food.protein}г | Ж: {food.fat}г | У: {food.carbs}г
-      </Text>
-      <Text style={styles.foodPortion}>на {food.per}</Text>
-    </TouchableOpacity>
-  );
-
-  const renderMeal = (meal) => (
-    <View key={meal.id} style={styles.mealItem}>
-      <View style={styles.mealHeader}>
-        <Text style={styles.mealName}>{meal.name}</Text>
-        <TouchableOpacity
-          onPress={() => deleteMeal(meal.id)}
-          style={styles.deleteButton}
-        >
-          <Text style={styles.deleteText}>×</Text>
-        </TouchableOpacity>
+  const renderDashboard = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>📊 Сегодня</Text>
+      
+      {/* Дневная статистика */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{dailyStats.calories}</Text>
+          <Text style={styles.statLabel}>ккал</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{dailyStats.protein}г</Text>
+          <Text style={styles.statLabel}>белки</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{dailyStats.carbs}г</Text>
+          <Text style={styles.statLabel}>углеводы</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{dailyStats.insulin}</Text>
+          <Text style={styles.statLabel}>ед инсулина</Text>
+        </View>
       </View>
-      <Text style={styles.mealDetails}>
-        {meal.quantity} {meal.unit} | {Math.round(meal.calories)} ккал
-      </Text>
-      <Text style={styles.mealMacros}>
-        Б: {meal.protein.toFixed(1)}г | Ж: {meal.fat.toFixed(1)}г | У: {meal.carbs.toFixed(1)}г
-      </Text>
+
+      {/* Прогресс к цели */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar}>
+          <View 
+            style={[
+              styles.progressFill, 
+              { width: `${Math.min((dailyStats.calories / 1760) * 100, 100)}%` }
+            ]} 
+          />
+        </View>
+        <Text style={styles.progressText}>
+          {dailyStats.calories}/1760 ккал ({Math.round((dailyStats.calories / 1760) * 100)}%)
+        </Text>
+      </View>
+
+      {/* Готовые контейнеры */}
+      <Text style={styles.sectionTitle}>🥡 Готовые контейнеры</Text>
+      {containers.length === 0 ? (
+        <Text style={styles.emptyText}>Нет готовых контейнеров</Text>
+      ) : (
+        containers.map(container => (
+          <TouchableOpacity
+            key={container.id}
+            style={styles.containerItem}
+            onPress={() => consumeContainer(container.id)}
+          >
+            <View style={styles.containerInfo}>
+              <Text style={styles.containerName}>{container.name}</Text>
+              <Text style={styles.containerDetails}>
+                {container.nutrition.calories} ккал • {container.insulin} ед • {container.servings} порций
+              </Text>
+            </View>
+            <Text style={styles.consumeButton}>Съесть</Text>
+          </TouchableOpacity>
+        ))
+      )}
+    </View>
+  );
+
+  const renderMealPrep = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>👨‍🍳 Meal Prep</Text>
+      
+      {!cookingSession ? (
+        <View style={styles.mealPrepStart}>
+          <Text style={styles.mealPrepTitle}>Система "10 контейнеров"</Text>
+          <Text style={styles.mealPrepDescription}>
+            2 часа готовки → 2-3 дня готовой еды
+          </Text>
+          
+          <View style={styles.planPreview}>
+            <Text style={styles.planTitle}>Стандартный план:</Text>
+            <Text style={styles.planItem}>• 2 творожных хлеба (20 кусков)</Text>
+            <Text style={styles.planItem}>• Куриный суп (6 порций)</Text>
+            <Text style={styles.planItem}>• Салат с тунцом (4 порции)</Text>
+            <Text style={styles.planItem}>• 6 хачапури</Text>
+            <Text style={styles.planItem}>• 4 мини-пиццы</Text>
+          </View>
+          
+          <TouchableOpacity
+            style={styles.startButton}
+            onPress={() => startCookingSession()}
+          >
+            <Text style={styles.startButtonText}>🚀 Начать готовку</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.cookingSession}>
+          <Text style={styles.sessionTitle}>Сессия готовки активна</Text>
+          <Text style={styles.sessionTime}>
+            Начато: {cookingSession.startTime.toLocaleTimeString()}
+          </Text>
+          
+          {cookingSession.recipes.map(recipe => (
+            <View key={recipe.id} style={styles.recipeItem}>
+              <View style={styles.recipeInfo}>
+                <Text style={styles.recipeName}>{recipe.name}</Text>
+                <Text style={styles.recipeTime}>{recipe.prepTime} мин</Text>
+              </View>
+              <View style={styles.recipeStatus}>
+                <Text style={[
+                  styles.statusText,
+                  recipe.status === 'completed' && styles.statusCompleted,
+                  recipe.status === 'cooking' && styles.statusCooking
+                ]}>
+                  {recipe.status === 'pending' && '⏳ Ожидает'}
+                  {recipe.status === 'cooking' && '🔥 Готовится'}
+                  {recipe.status === 'completed' && '✅ Готово'}
+                </Text>
+              </View>
+            </View>
+          ))}
+          
+          <TouchableOpacity
+            style={styles.completeButton}
+            onPress={() => {
+              Alert.alert(
+                'Завершить готовку?',
+                'Все готовые блюда будут добавлены в контейнеры',
+                [
+                  { text: 'Отмена', style: 'cancel' },
+                  { text: 'Завершить', onPress: completeCookingSession }
+                ]
+              );
+            }}
+          >
+            <Text style={styles.completeButtonText}>Завершить сессию</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderTimers = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>⏰ Таймеры</Text>
+      
+      {activeTimers.length === 0 ? (
+        <Text style={styles.emptyText}>Нет активных таймеров</Text>
+      ) : (
+        activeTimers.map(timer => (
+          <View key={timer.id} style={styles.timerItem}>
+            <Text style={styles.timerName}>{timer.name}</Text>
+            <Text style={styles.timerTime}>
+              {Math.ceil((timer.endTime - Date.now()) / 1000 / 60)} мин
+            </Text>
+          </View>
+        ))
+      )}
     </View>
   );
 
   return (
     <View style={styles.container}>
+      {/* Табы */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'dashboard' && styles.activeTab]}
+          onPress={() => setActiveTab('dashboard')}
+        >
+          <Text style={[styles.tabText, activeTab === 'dashboard' && styles.activeTabText]}>
+            Сегодня
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'mealprep' && styles.activeTab]}
+          onPress={() => setActiveTab('mealprep')}
+        >
+          <Text style={[styles.tabText, activeTab === 'mealprep' && styles.activeTabText]}>
+            Meal Prep
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'timers' && styles.activeTab]}
+          onPress={() => setActiveTab('timers')}
+        >
+          <Text style={[styles.tabText, activeTab === 'timers' && styles.activeTabText]}>
+            Таймеры
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Контент */}
       <ScrollView style={styles.content}>
-        {/* Статистика дня */}
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Статистика дня</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{Math.round(dayStats.calories)}</Text>
-              <Text style={styles.statLabel}>ккал</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{dayStats.protein.toFixed(1)}</Text>
-              <Text style={styles.statLabel}>белки</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{dayStats.fat.toFixed(1)}</Text>
-              <Text style={styles.statLabel}>жиры</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{dayStats.carbs.toFixed(1)}</Text>
-              <Text style={styles.statLabel}>углеводы</Text>
-            </View>
-          </View>
-          <View style={styles.insulinContainer}>
-            <Text style={styles.insulinText}>
-              Инсулин: {Math.round(dayStats.carbs / 5)} ед
-            </Text>
-          </View>
-        </View>
-
-        {/* Список приемов пищи */}
-        <View style={styles.mealsContainer}>
-          <Text style={styles.sectionTitle}>Приемы пищи</Text>
-          {meals.length === 0 ? (
-            <Text style={styles.emptyText}>Нет записей о питании</Text>
-          ) : (
-            meals.map(renderMeal)
-          )}
-        </View>
+        {activeTab === 'dashboard' && renderDashboard()}
+        {activeTab === 'mealprep' && renderMealPrep()}
+        {activeTab === 'timers' && renderTimers()}
       </ScrollView>
-
-      {/* Кнопка добавления */}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.addButtonText}>+ Добавить прием пищи</Text>
-      </TouchableOpacity>
-
-      {/* Модальное окно добавления */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelButton}>Отмена</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Добавить прием пищи</Text>
-            <TouchableOpacity onPress={handleAddMeal}>
-              <Text style={styles.saveButton}>Сохранить</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            {/* Тип приема пищи */}
-            <Text style={styles.sectionTitle}>Тип приема пищи</Text>
-            <View style={styles.mealTypeContainer}>
-              {renderMealTypeButton('breakfast', 'Завтрак')}
-              {renderMealTypeButton('lunch', 'Обед')}
-              {renderMealTypeButton('dinner', 'Ужин')}
-              {renderMealTypeButton('snack', 'Перекус')}
-            </View>
-
-            {/* Выбор продукта */}
-            <Text style={styles.sectionTitle}>Выберите продукт</Text>
-            {FOOD_DATABASE.map(renderFoodItem)}
-
-            {/* Количество */}
-            {selectedFood && (
-              <View style={styles.quantityContainer}>
-                <Text style={styles.sectionTitle}>Количество</Text>
-                <TextInput
-                  style={styles.quantityInput}
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  keyboardType="numeric"
-                  placeholder="1"
-                />
-                <Text style={styles.quantityUnit}>{selectedFood.per}</Text>
-              </View>
-            )}
-          </ScrollView>
-        </View>
-      </Modal>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: COLORS.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
   content: {
     flex: 1,
-    padding: 16,
   },
-  statsContainer: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+  section: {
+    padding: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 12,
+    marginBottom: 15,
   },
-  statsGrid: {
+  statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    backgroundColor: COLORS.surface,
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 15,
   },
   statItem: {
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.text,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.textSecondary,
     marginTop: 4,
   },
-  insulinContainer: {
-    backgroundColor: COLORS.warning + '20',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
+  progressContainer: {
+    backgroundColor: COLORS.surface,
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 20,
   },
-  insulinText: {
+  progressBar: {
+    height: 8,
+    backgroundColor: COLORS.border,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.success,
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  containerItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  containerInfo: {
+    flex: 1,
+  },
+  containerName: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.warning,
+    color: COLORS.text,
   },
-  mealsContainer: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
+  containerDetails: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
+  consumeButton: {
+    fontSize: 16,
+    color: COLORS.primary,
+    fontWeight: '600',
   },
   emptyText: {
-    textAlign: 'center',
+    fontSize: 16,
     color: COLORS.textSecondary,
+    textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 20,
   },
-  mealItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    paddingVertical: 12,
+  mealPrepStart: {
+    backgroundColor: COLORS.surface,
+    padding: 20,
+    borderRadius: 12,
   },
-  mealHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  mealPrepTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 8,
   },
-  mealName: {
+  mealPrepDescription: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    marginBottom: 20,
+  },
+  planPreview: {
+    marginBottom: 20,
+  },
+  planTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.text,
+    marginBottom: 10,
   },
-  deleteButton: {
-    width: 24,
-    height: 24,
+  planItem: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  startButton: {
+    backgroundColor: COLORS.primary,
+    padding: 15,
     borderRadius: 12,
-    backgroundColor: COLORS.danger,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  deleteText: {
+  startButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
     color: COLORS.surface,
+  },
+  cookingSession: {
+    backgroundColor: COLORS.surface,
+    padding: 20,
+    borderRadius: 12,
+  },
+  sessionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  sessionTime: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 20,
+  },
+  recipeItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  recipeInfo: {
+    flex: 1,
+  },
+  recipeName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.text,
+  },
+  recipeTime: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  recipeStatus: {
+    alignItems: 'flex-end',
+  },
+  statusText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  statusCooking: {
+    color: COLORS.warning,
+  },
+  statusCompleted: {
+    color: COLORS.success,
+  },
+  completeButton: {
+    backgroundColor: COLORS.success,
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  completeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.surface,
+  },
+  timerItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  timerName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.text,
+  },
+  timerTime: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  mealDetails: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  mealMacros: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  addButton: {
-    backgroundColor: COLORS.primary,
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: COLORS.surface,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  cancelButton: {
-    color: COLORS.textSecondary,
-    fontSize: 16,
-  },
-  saveButton: {
-    color: COLORS.primary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalContent: {
-    flex: 1,
-    padding: 16,
-  },
-  mealTypeContainer: {
-    flexDirection: 'row',
-    marginBottom: 24,
-  },
-  mealTypeButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: COLORS.surface,
-    marginRight: 8,
-    alignItems: 'center',
-  },
-  mealTypeButtonActive: {
-    backgroundColor: COLORS.primary,
-  },
-  mealTypeText: {
-    color: COLORS.text,
-    fontSize: 14,
-  },
-  mealTypeTextActive: {
-    color: COLORS.surface,
-    fontWeight: '600',
-  },
-  foodItem: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  foodItemSelected: {
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-  },
-  foodName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  foodDetails: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  foodPortion: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  quantityContainer: {
-    marginTop: 24,
-  },
-  quantityInput: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  quantityUnit: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    color: COLORS.warning,
   },
 });
+
+export default NutritionScreen;

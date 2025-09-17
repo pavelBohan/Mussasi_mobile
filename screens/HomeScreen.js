@@ -1,268 +1,228 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { COLORS } from '../constants/colors';
-import { CurrentMealWidget, ShoppingWidget, NutritionProgressWidget } from '../components/NutritionWidgets';
-import SchedulePreview from '../components/SchedulePreview';
 
-export default function HomeScreen({ navigation }) {
-  const [blocks, setBlocks] = useState([
-    { id: 1, title: 'Ментальное', type: 'mental', value: 0, target: 100, color: COLORS.secondary },
-    { id: 2, title: 'Питание', type: 'nutrition', value: 0, target: 100, color: COLORS.success },
-    { id: 3, title: 'Движение', type: 'movement', value: 0, target: 100, color: COLORS.warning },
-    { id: 4, title: 'Восстановление', type: 'recovery', value: 0, target: 100, color: COLORS.primary },
+const HomeScreen = () => {
+  const [dailyGoals, setDailyGoals] = useState([
+    { id: 1, title: 'Измерить глюкозу утром', completed: false, type: 'health' },
+    { id: 2, title: 'Зарядка BIOMACHINE', completed: false, type: 'fitness' },
+    { id: 3, title: 'Завтрак + инсулин', completed: false, type: 'nutrition' },
+    { id: 4, title: 'Посетить все пары', completed: false, type: 'education' },
+    { id: 5, title: 'Домашние задания', completed: false, type: 'education' },
   ]);
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState(null);
-  const [inputValue, setInputValue] = useState('');
-
-  const updateBlock = (blockId, newValue) => {
-    setBlocks(blocks.map(block => 
-      block.id === blockId ? { ...block, value: Math.min(newValue, block.target) } : block
-    ));
+  const toggleGoal = (goalId) => {
+    setDailyGoals(prev => 
+      prev.map(goal => 
+        goal.id === goalId 
+          ? { ...goal, completed: !goal.completed }
+          : goal
+      )
+    );
   };
 
-  const handleBlockPress = (block) => {
-    setSelectedBlock(block);
-    setInputValue(block.value.toString());
-    setModalVisible(true);
-  };
-
-  const handleSave = () => {
-    if (selectedBlock) {
-      const value = parseInt(inputValue) || 0;
-      updateBlock(selectedBlock.id, value);
-    }
-    setModalVisible(false);
-    setSelectedBlock(null);
-    setInputValue('');
-  };
-
-  const BlockComponent = ({ block, onPress }) => (
-    <TouchableOpacity style={styles.block} onPress={() => onPress(block)}>
-      <View style={styles.blockHeader}>
-        <Text style={styles.blockTitle}>{block.title}</Text>
-        <Text style={styles.blockValue}>{block.value}/{block.target}</Text>
-      </View>
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View 
-            style={[
-              styles.progressFill, 
-              { 
-                width: `${(block.value / block.target) * 100}%`,
-                backgroundColor: block.color 
-              }
-            ]} 
-          />
-        </View>
-        <Text style={styles.progressText}>{Math.round((block.value / block.target) * 100)}%</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const completedGoals = dailyGoals.filter(goal => goal.completed).length;
+  const totalGoals = dailyGoals.length;
+  const progressPercentage = (completedGoals / totalGoals) * 100;
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Заголовок */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>ЗОЖ 4.0</Text>
-          <Text style={styles.headerSubtitle}>Система здорового образа жизни</Text>
+    <ScrollView style={styles.container}>
+      {/* Заголовок дня */}
+      <View style={styles.header}>
+        <Text style={styles.dateText}>Суббота, 13 сентября</Text>
+        <Text style={styles.weekText}>Выходной день</Text>
+      </View>
+
+      {/* Прогресс дня */}
+      <View style={styles.progressCard}>
+        <Text style={styles.progressTitle}>Прогресс дня</Text>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
         </View>
+        <Text style={styles.progressText}>{completedGoals}/{totalGoals} целей выполнено</Text>
+      </View>
 
-        {/* Блоки ЗОЖ 4.0 */}
-        <View style={styles.blocksContainer}>
-          {blocks.map((block) => (
-            <BlockComponent 
-              key={block.id} 
-              block={block} 
-              onPress={handleBlockPress}
-            />
-          ))}
-        </View>
-
-        {/* Виджеты питания */}
-        <CurrentMealWidget onPress={() => navigation.navigate('Nutrition')} />
-        <ShoppingWidget onPress={() => navigation.navigate('Nutrition')} />
-        <NutritionProgressWidget onPress={() => navigation.navigate('Nutrition')} />
-
-        {/* Превью расписания */}
-        <SchedulePreview />
-      </ScrollView>
-
-      {/* Модальное окно редактирования */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {selectedBlock?.title}
-            </Text>
-            <TextInput
-              style={styles.modalInput}
-              value={inputValue}
-              onChangeText={setInputValue}
-              keyboardType="numeric"
-              placeholder="Введите значение"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.cancelButtonText}>Отмена</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.saveButton]} 
-                onPress={handleSave}
-              >
-                <Text style={styles.saveButtonText}>Сохранить</Text>
-              </TouchableOpacity>
+      {/* Цели дня */}
+      <View style={styles.goalsCard}>
+        <Text style={styles.cardTitle}>Цели дня</Text>
+        {dailyGoals.map(goal => (
+          <TouchableOpacity 
+            key={goal.id} 
+            style={styles.goalItem}
+            onPress={() => toggleGoal(goal.id)}
+          >
+            <View style={[
+              styles.checkbox, 
+              goal.completed && styles.checkboxCompleted
+            ]}>
+              {goal.completed && <Text style={styles.checkmark}>✓</Text>}
             </View>
-          </View>
+            <Text style={[
+              styles.goalText,
+              goal.completed && styles.goalTextCompleted
+            ]}>
+              {goal.title}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Следующие события */}
+      <View style={styles.eventsCard}>
+        <Text style={styles.cardTitle}>Сегодня</Text>
+        <View style={styles.eventItem}>
+          <Text style={styles.eventTime}>07:00</Text>
+          <Text style={styles.eventTitle}>Подъем + глюкоза</Text>
         </View>
-      </Modal>
-    </View>
+        <View style={styles.eventItem}>
+          <Text style={styles.eventTime}>07:05</Text>
+          <Text style={styles.eventTitle}>Зарядка BIOMACHINE (полная)</Text>
+        </View>
+        <View style={styles.eventItem}>
+          <Text style={styles.eventTime}>08:00</Text>
+          <Text style={styles.eventTitle}>Завтрак + инсулин</Text>
+        </View>
+      </View>
+
+      {/* XP и достижения */}
+      <View style={styles.xpCard}>
+        <Text style={styles.cardTitle}>Опыт (XP)</Text>
+        <Text style={styles.xpText}>+25 XP за сегодня</Text>
+        <Text style={styles.xpTotal}>Всего: 1,247 XP</Text>
+      </View>
+    </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
+    padding: 16,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    alignItems: 'center',
+    marginBottom: 20,
   },
-  headerTitle: {
-    fontSize: 32,
+  dateText: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 5,
   },
-  headerSubtitle: {
+  weekText: {
     fontSize: 16,
     color: COLORS.textSecondary,
+    marginTop: 4,
   },
-  blocksContainer: {
-    marginBottom: 30,
-  },
-  block: {
+  progressCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 15,
+    padding: 16,
+    marginBottom: 16,
   },
-  blockHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  blockTitle: {
+  progressTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
-  },
-  blockValue: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: COLORS.textSecondary,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 12,
   },
   progressBar: {
-    flex: 1,
     height: 8,
     backgroundColor: COLORS.border,
     borderRadius: 4,
-    marginRight: 10,
+    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
+    backgroundColor: COLORS.success,
     borderRadius: 4,
   },
   progressText: {
     fontSize: 14,
-    fontWeight: '500',
     color: COLORS.textSecondary,
-    minWidth: 35,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
+  goalsCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 12,
-    padding: 20,
-    width: '80%',
-    maxWidth: 300,
+    padding: 16,
+    marginBottom: 16,
   },
-  modalTitle: {
+  cardTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
-    textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  modalButtons: {
+  goalItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
     alignItems: 'center',
+    paddingVertical: 8,
   },
-  cancelButton: {
-    backgroundColor: COLORS.border,
-    marginRight: 10,
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  saveButton: {
-    backgroundColor: COLORS.primary,
-    marginLeft: 10,
+  checkboxCompleted: {
+    backgroundColor: COLORS.success,
+    borderColor: COLORS.success,
   },
-  cancelButtonText: {
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  saveButtonText: {
+  checkmark: {
     color: COLORS.surface,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  goalText: {
+    fontSize: 16,
+    color: COLORS.text,
+    flex: 1,
+  },
+  goalTextCompleted: {
+    textDecorationLine: 'line-through',
+    color: COLORS.textSecondary,
+  },
+  eventsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  eventItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  eventTime: {
+    fontSize: 14,
     fontWeight: '600',
+    color: COLORS.primary,
+    width: 60,
+  },
+  eventTitle: {
+    fontSize: 16,
+    color: COLORS.text,
+    flex: 1,
+  },
+  xpCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  xpText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.success,
+  },
+  xpTotal: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 4,
   },
 });
+
+export default HomeScreen;
