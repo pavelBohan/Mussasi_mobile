@@ -1,234 +1,229 @@
-// components/Schedule.js
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
   TouchableOpacity,
-  Dimensions 
+  Alert
 } from 'react-native';
-import { scheduleData } from '../data/scheduleData';
-import { scheduleUtils } from '../utils/scheduleUtils';
 import { COLORS } from '../constants/colors';
 
-const { width } = Dimensions.get('window');
+// Данные расписания
+const SCHEDULE_DATA = {
+  week3: {
+    monday: [
+      { time: '13:10-14:30', subject: 'Деловые коммуникации', teacher: 'Макарова Ю.Л.', room: '4 пара' },
+      { time: '14:50-16:10', subject: 'Вычислительные системы', teacher: 'Ягодкин Д.А.', room: '5 пара' },
+      { time: '16:40-18:00', subject: 'Вычислительные системы (пр)', teacher: 'Ягодкин Д.А.', room: '6 пара' }
+    ],
+    tuesday: [
+      { time: '13:10-14:30', subject: 'Математический анализ', teacher: 'Крюкова О.А.', room: '4 пара' },
+      { time: '14:50-16:10', subject: 'Математический анализ (пр)', teacher: 'Крюкова О.А.', room: '5 пара' }
+    ],
+    wednesday: [
+      { time: '11:30-12:50', subject: 'Теория вероятностей', teacher: 'Шмаркова Л.И.', room: '3 пара' },
+      { time: '13:10-14:30', subject: 'Технологии программирования', teacher: 'Савина А.Г.', room: '4 пара' },
+      { time: '14:50-18:00', subject: 'Физкультура', teacher: 'Дрожжаков А.И.', room: '5-6 пары' }
+    ],
+    thursday: [
+      { time: '13:10-16:10', subject: 'Теория вероятностей', teacher: 'Шмаркова Л.И.', room: '4-5 пары' }
+    ],
+    friday: [
+      { time: '9:40-12:50', subject: 'Иностранный язык', teacher: 'Лепешкина Г.Г.', room: '2-3 пары' },
+      { time: '13:10-14:30', subject: 'Технологии программирования (пр)', teacher: 'Бессонова М.П.', room: '4 пара' },
+      { time: '14:50-16:10', subject: 'Деловые коммуникации (пр)', teacher: 'Макарова Ю.Л.', room: '5 пара' }
+    ],
+    saturday: [
+      { time: '8:00-11:00', subject: 'Теория систем', teacher: 'Логинов И.В.', room: '1-2 пары' },
+      { time: '11:30-14:30', subject: 'Методы проектирования ИС', teacher: 'Зимина Л.В.', room: '3-4 пары' }
+    ]
+  },
+  week4: {
+    monday: [
+      { time: '13:10-14:30', subject: 'Теория вероятностей', teacher: 'Шмаркова Л.И.', room: '4 пара' },
+      { time: '14:50-16:10', subject: 'Методы проектирования ИС', teacher: 'Зимина Л.В.', room: '5 пара' },
+      { time: '16:40-18:00', subject: 'Теория вероятностей (пр)', teacher: 'Шмаркова Л.И.', room: '6 пара' }
+    ],
+    tuesday: [
+      { time: '13:10-14:30', subject: 'Методы проектирования ИС (пр)', teacher: 'Зимина Л.В.', room: '4 пара' },
+      { time: '14:50-18:00', subject: 'Математический анализ', teacher: 'Крюкова О.А.', room: '5-6 пары' },
+      { time: '18:20-19:40', subject: 'Деловые коммуникации', teacher: 'Макарова Ю.Л.', room: '7 пара' }
+    ],
+    wednesday: [
+      { time: '13:10-14:30', subject: 'Технологии программирования', teacher: 'Савина А.Г.', room: '4 пара' },
+      { time: '14:50-18:00', subject: 'Физкультура', teacher: 'Дрожжаков А.И.', room: '5-6 пары' }
+    ],
+    thursday: [
+      { time: '11:30-12:50', subject: 'Технологии программирования (пр)', teacher: 'Бессонова М.П.', room: '3 пара' },
+      { time: '13:10-14:30', subject: 'Методы проектирования ИС', teacher: 'Зимина Л.В.', room: '4 пара' }
+    ],
+    friday: [
+      { time: '9:40-12:50', subject: 'Иностранный язык', teacher: 'Лепешкина Г.Г.', room: '2-3 пары' },
+      { time: '13:10-16:10', subject: 'Вычислительные системы', teacher: 'Ягодкин Д.А.', room: '4-5 пары' }
+    ],
+    saturday: [
+      { time: '8:00-11:00', subject: 'Теория систем', teacher: 'Логинов И.В.', room: '1-2 пары' },
+      { time: '11:30-12:50', subject: 'Вычислительные системы', teacher: 'Ягодкин Д.А.', room: '3 пара' }
+    ]
+  }
+};
 
-const Schedule = () => {
-  const [selectedWeek, setSelectedWeek] = useState(scheduleData.getCurrentWeek());
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const DAY_NAMES = {
+  monday: 'Понедельник',
+  tuesday: 'Вторник', 
+  wednesday: 'Среда',
+  thursday: 'Четверг',
+  friday: 'Пятница',
+  saturday: 'Суббота'
+};
 
-  // Обновление времени каждую минуту
+const ScheduleScreen = () => {
+  const [currentWeek, setCurrentWeek] = useState('week3');
+  const [selectedDay, setSelectedDay] = useState('monday');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
+    // Определяем текущий день недели
+    const today = new Date();
+    const dayIndex = today.getDay(); // 0 = воскресенье, 1 = понедельник, и т.д.
+    
+    if (dayIndex >= 1 && dayIndex <= 6) {
+      const dayKey = DAYS[dayIndex - 1];
+      setSelectedDay(dayKey);
+    }
   }, []);
 
-  const days = [
-    { key: 'monday', name: 'ПН', fullName: 'Понедельник' },
-    { key: 'tuesday', name: 'ВТ', fullName: 'Вторник' },
-    { key: 'wednesday', name: 'СР', fullName: 'Среда' },
-    { key: 'thursday', name: 'ЧТ', fullName: 'Четверг' },
-    { key: 'friday', name: 'ПТ', fullName: 'Пятница' },
-    { key: 'saturday', name: 'СБ', fullName: 'Суббота' },
-    { key: 'sunday', name: 'ВС', fullName: 'Воскресенье' }
-  ];
-
-  const getCurrentDay = () => {
-    const dayIndex = new Date().getDay();
-    const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    return dayKeys[dayIndex];
+  const getDaySchedule = (week, day) => {
+    try {
+      const schedule = SCHEDULE_DATA[week]?.[day] || [];
+      return schedule;
+    } catch (err) {
+      console.error('Error getting day schedule:', err);
+      setError('Ошибка загрузки расписания');
+      return [];
+    }
   };
 
-  const renderWeekSelector = () => (
-    <View style={styles.weekSelector}>
-      <TouchableOpacity
-        style={[styles.weekButton, selectedWeek === 1 && styles.weekButtonActive]}
-        onPress={() => setSelectedWeek(1)}
-      >
-        <Text style={[styles.weekButtonText, selectedWeek === 1 && styles.weekButtonTextActive]}>
-          1-я неделя
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.weekButton, selectedWeek === 2 && styles.weekButtonActive]}
-        onPress={() => setSelectedWeek(2)}
-      >
-        <Text style={[styles.weekButtonText, selectedWeek === 2 && styles.weekButtonTextActive]}>
-          2-я неделя
-        </Text>
-      </TouchableOpacity>
+  const renderScheduleItem = (item, index) => (
+    <View key={index} style={styles.scheduleItem}>
+      <View style={styles.timeContainer}>
+        <Text style={styles.timeText}>{item.time}</Text>
+        <Text style={styles.roomText}>{item.room}</Text>
+      </View>
+      <View style={styles.subjectContainer}>
+        <Text style={styles.subjectText}>{item.subject}</Text>
+        <Text style={styles.teacherText}>{item.teacher}</Text>
+      </View>
     </View>
   );
 
-  const renderDayTabs = () => (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false}
-      style={styles.dayTabs}
-      contentContainerStyle={styles.dayTabsContent}
+  const renderDayButton = (day) => (
+    <TouchableOpacity
+      key={day}
+      style={[
+        styles.dayButton,
+        selectedDay === day && styles.selectedDayButton
+      ]}
+      onPress={() => setSelectedDay(day)}
     >
-      {days.map((day) => {
-        const daySchedule = scheduleData.getDaySchedule(day.key, selectedWeek);
-        const isToday = day.key === getCurrentDay() && selectedWeek === scheduleData.getCurrentWeek();
-        const hasClasses = daySchedule.length > 0;
-        const hasVolleyball = scheduleUtils.hasVolleyball(daySchedule);
-        
-        return (
-          <TouchableOpacity
-            key={day.key}
-            style={[
-              styles.dayTab,
-              isToday && styles.dayTabToday,
-              selectedDay === day.key && styles.dayTabSelected
-            ]}
-            onPress={() => setSelectedDay(selectedDay === day.key ? null : day.key)}
-          >
-            <Text style={[
-              styles.dayTabText,
-              isToday && styles.dayTabTextToday,
-              selectedDay === day.key && styles.dayTabTextSelected
-            ]}>
-              {day.name}
-            </Text>
-            {hasClasses && (
-              <View style={styles.dayIndicators}>
-                <View style={[styles.classIndicator, isToday && styles.classIndicatorToday]} />
-                {hasVolleyball && <Text style={styles.volleyballIndicator}>🏐</Text>}
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
-  );
-
-  const renderClassCard = (classItem, index, dayKey) => {
-    const isActive = scheduleUtils.isClassActive(classItem.time) && 
-                    dayKey === getCurrentDay() && 
-                    selectedWeek === scheduleData.getCurrentWeek();
-    const isVolleyball = classItem.period === 'volleyball';
-
-    return (
-      <View key={index} style={[
-        styles.classCard,
-        isActive && styles.classCardActive,
-        isVolleyball && styles.volleyballCard
+      <Text style={[
+        styles.dayButtonText,
+        selectedDay === day && styles.selectedDayButtonText
       ]}>
-        <View style={styles.classHeader}>
-          <Text style={[styles.classTime, isActive && styles.classTimeActive]}>
-            {classItem.time}
-          </Text>
-          {isVolleyball ? (
-            <Text style={styles.volleyballBadge}>🏐 ВОЛЕЙБОЛ</Text>
-          ) : (
-            <Text style={[styles.classPeriod, isActive && styles.classPeriodActive]}>
-              {classItem.period}-я пара
-            </Text>
-          )}
-        </View>
-        
-        <Text style={[styles.classSubject, isActive && styles.classSubjectActive]}>
-          {classItem.subject}
-        </Text>
-        
-        {classItem.teacher && (
-          <Text style={[styles.classTeacher, isActive && styles.classTeacherActive]}>
-            👨‍🏫 {classItem.teacher}
-          </Text>
-        )}
-        
-        <Text style={[styles.classRoom, isActive && styles.classRoomActive]}>
-          📍 {classItem.room}
-        </Text>
-        
-        {isActive && (
-          <View style={styles.activeIndicator}>
-            <Text style={styles.activeText}>СЕЙЧАС</Text>
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const renderDaySchedule = (dayKey) => {
-    const day = days.find(d => d.key === dayKey);
-    const daySchedule = scheduleData.getDaySchedule(dayKey, selectedWeek);
-    const dayStatus = scheduleUtils.getDayStatus(daySchedule);
-    const isToday = dayKey === getCurrentDay() && selectedWeek === scheduleData.getCurrentWeek();
-
-    return (
-      <View style={styles.daySchedule}>
-        <View style={styles.dayHeader}>
-          <Text style={styles.dayTitle}>
-            {day.fullName}
-            {isToday && <Text style={styles.todayBadge}> • СЕГОДНЯ</Text>}
-          </Text>
-          <Text style={styles.dayStatus}>
-            {dayStatus.status}
-            {dayStatus.endTime && ` • до ${dayStatus.endTime}`}
-          </Text>
-        </View>
-
-        {daySchedule.length === 0 ? (
-          <View style={styles.emptyDay}>
-            <Text style={styles.emptyDayText}>🎉 Выходной день</Text>
-            <Text style={styles.emptyDaySubtext}>Время для отдыха и личных проектов</Text>
-          </View>
-        ) : (
-          <View style={styles.classList}>
-            {daySchedule.map((classItem, index) => 
-              renderClassCard(classItem, index, dayKey)
-            )}
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const renderWeekOverview = () => (
-    <View style={styles.weekOverview}>
-      <Text style={styles.overviewTitle}>
-        📅 {selectedWeek}-я неделя • Обзор
+        {DAY_NAMES[day]}
       </Text>
-      
-      <View style={styles.weekGrid}>
-        {days.map((day) => {
-          const daySchedule = scheduleData.getDaySchedule(day.key, selectedWeek);
-          const dayStatus = scheduleUtils.getDayStatus(daySchedule);
-          const isToday = day.key === getCurrentDay() && selectedWeek === scheduleData.getCurrentWeek();
-          const hasVolleyball = scheduleUtils.hasVolleyball(daySchedule);
-
-          return (
-            <TouchableOpacity
-              key={day.key}
-              style={[styles.weekDayCard, isToday && styles.weekDayCardToday]}
-              onPress={() => setSelectedDay(day.key)}
-            >
-              <Text style={[styles.weekDayName, isToday && styles.weekDayNameToday]}>
-                {day.name}
-              </Text>
-              <Text style={styles.weekDayStatus}>
-                {dayStatus.classCount === 0 ? '🎉' : `${dayStatus.classCount} ${dayStatus.classCount === 1 ? 'пара' : 'пары'}`}
-              </Text>
-              {hasVolleyball && <Text style={styles.weekVolleyball}>🏐</Text>}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
+    </TouchableOpacity>
   );
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>❌ {error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => {
+              setError(null);
+              setIsLoading(false);
+            }}
+          >
+            <Text style={styles.retryButtonText}>Попробовать снова</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  const todaySchedule = getDaySchedule(currentWeek, selectedDay);
 
   return (
     <View style={styles.container}>
-      {renderWeekSelector()}
-      {renderDayTabs()}
-      
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {selectedDay ? renderDaySchedule(selectedDay) : renderWeekOverview()}
+      {/* Заголовок */}
+      <View style={styles.header}>
+        <Text style={styles.title}>📅 Расписание</Text>
+        <Text style={styles.subtitle}>2 ИСОСП (б) • РАНХиГС</Text>
+      </View>
+
+      {/* Переключатель недель */}
+      <View style={styles.weekSelector}>
+        <TouchableOpacity
+          style={[
+            styles.weekButton,
+            currentWeek === 'week3' && styles.selectedWeekButton
+          ]}
+          onPress={() => setCurrentWeek('week3')}
+        >
+          <Text style={[
+            styles.weekButtonText,
+            currentWeek === 'week3' && styles.selectedWeekButtonText
+          ]}>
+            Неделя 3
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[
+            styles.weekButton,
+            currentWeek === 'week4' && styles.selectedWeekButton
+          ]}
+          onPress={() => setCurrentWeek('week4')}
+        >
+          <Text style={[
+            styles.weekButtonText,
+            currentWeek === 'week4' && styles.selectedWeekButtonText
+          ]}>
+            Неделя 4
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Дни недели */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.daysContainer}
+        contentContainerStyle={styles.daysContent}
+      >
+        {DAYS.map(renderDayButton)}
+      </ScrollView>
+
+      {/* Расписание на день */}
+      <ScrollView style={styles.scheduleContainer}>
+        <Text style={styles.dayTitle}>
+          {DAY_NAMES[selectedDay]} • {currentWeek === 'week3' ? 'Неделя 3' : 'Неделя 4'}
+        </Text>
+        
+        {todaySchedule.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>🎉 Сегодня пар нет!</Text>
+            <Text style={styles.emptySubtext}>Можно отдохнуть или заняться проектами</Text>
+          </View>
+        ) : (
+          todaySchedule.map(renderScheduleItem)
+        )}
       </ScrollView>
     </View>
   );
@@ -237,268 +232,163 @@ const Schedule = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    padding: 20,
+    backgroundColor: COLORS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
   },
   weekSelector: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    margin: 16,
-    borderRadius: 12,
-    padding: 4,
+    padding: 20,
+    gap: 10,
   },
   weekButton: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.surface,
     borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  weekButtonActive: {
-    backgroundColor: '#007bff',
+  selectedWeekButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   weekButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.text,
   },
-  weekButtonTextActive: {
-    color: 'white',
+  selectedWeekButtonText: {
+    color: COLORS.surface,
   },
-  dayTabs: {
-    backgroundColor: 'white',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
+  daysContainer: {
+    maxHeight: 60,
   },
-  dayTabsContent: {
-    paddingHorizontal: 8,
+  daysContent: {
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  dayButton: {
     paddingVertical: 8,
-  },
-  dayTab: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 4,
-    borderRadius: 8,
-    alignItems: 'center',
-    minWidth: 50,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  dayTabToday: {
-    backgroundColor: '#e3f2fd',
+  selectedDayButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
-  dayTabSelected: {
-    backgroundColor: '#007bff',
-  },
-  dayTabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
-  },
-  dayTabTextToday: {
-    color: '#1976d2',
-  },
-  dayTabTextSelected: {
-    color: 'white',
-  },
-  dayIndicators: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  classIndicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#28a745',
-    marginRight: 4,
-  },
-  classIndicatorToday: {
-    backgroundColor: '#1976d2',
-  },
-  volleyballIndicator: {
-    fontSize: 8,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 100,
-  },
-  weekOverview: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  overviewTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  weekGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  weekDayCard: {
-    width: (width - 64) / 3 - 8,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    alignItems: 'center',
-  },
-  weekDayCardToday: {
-    backgroundColor: '#e3f2fd',
-    borderWidth: 2,
-    borderColor: '#1976d2',
-  },
-  weekDayName: {
+  dayButtonText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '500',
+    color: COLORS.text,
   },
-  weekDayNameToday: {
-    color: '#1976d2',
+  selectedDayButtonText: {
+    color: COLORS.surface,
   },
-  weekDayStatus: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  weekVolleyball: {
-    fontSize: 10,
-    marginTop: 2,
-  },
-  daySchedule: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  dayHeader: {
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  scheduleContainer: {
+    flex: 1,
+    padding: 20,
   },
   dayTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.text,
+    marginBottom: 20,
   },
-  todayBadge: {
-    color: '#1976d2',
-    fontSize: 16,
-  },
-  dayStatus: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  emptyDay: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  emptyDayText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#28a745',
-  },
-  emptyDaySubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-  },
-  classList: {
-    gap: 12,
-  },
-  classCard: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#dee2e6',
-  },
-  classCardActive: {
-    backgroundColor: '#d4edda',
-    borderLeftColor: '#28a745',
-  },
-  volleyballCard: {
-    backgroundColor: '#fff3cd',
-    borderLeftColor: '#ffc107',
-  },
-  classHeader: {
+  scheduleItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  classTime: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#495057',
-  },
-  classTimeActive: {
-    color: '#155724',
-  },
-  classPeriod: {
-    fontSize: 12,
-    color: '#6c757d',
-    backgroundColor: '#e9ecef',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: COLORS.surface,
+    padding: 16,
     borderRadius: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
   },
-  classPeriodActive: {
-    backgroundColor: '#c3e6cb',
-    color: '#155724',
+  timeContainer: {
+    width: 100,
+    marginRight: 16,
   },
-  volleyballBadge: {
-    fontSize: 12,
-    color: '#856404',
-    backgroundColor: '#ffeaa7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  timeText: {
+    fontSize: 14,
     fontWeight: 'bold',
+    color: COLORS.text,
   },
-  classSubject: {
+  roomText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  subjectContainer: {
+    flex: 1,
+  },
+  subjectText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
-    marginBottom: 8,
-  },
-  classSubjectActive: {
-    color: '#155724',
-  },
-  classTeacher: {
-    fontSize: 14,
-    color: '#6c757d',
+    color: COLORS.text,
     marginBottom: 4,
   },
-  classTeacherActive: {
-    color: '#155724',
-  },
-  classRoom: {
+  teacherText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: COLORS.textSecondary,
   },
-  classRoomActive: {
-    color: '#155724',
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
   },
-  activeIndicator: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#28a745',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  activeText: {
-    color: 'white',
-    fontSize: 10,
+  emptyText: {
+    fontSize: 20,
     fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: COLORS.danger,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: COLORS.surface,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
-export default Schedule;
+export default ScheduleScreen;
