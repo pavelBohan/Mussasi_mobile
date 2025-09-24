@@ -1,167 +1,208 @@
-import React, { useState, useContext } from 'react';
+
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  FlatList,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/colors';
-import { NutritionContext } from '../../context/NutritionContext';
 
 const ShoppingTab = () => {
-  const { shoppingLists, toggleShoppingItem } = useContext(NutritionContext);
-  const [expandedLists, setExpandedLists] = useState({});
+  const [shoppingItems, setShoppingItems] = useState([
+    { id: '1', name: 'Куриное филе', quantity: '1 кг', price: 350, checked: false, category: 'Мясо' },
+    { id: '2', name: 'Творог 0%', quantity: '500 г', price: 120, checked: true, category: 'Молочные' },
+    { id: '3', name: 'Овсянка', quantity: '1 кг', price: 80, checked: false, category: 'Крупы' },
+    { id: '4', name: 'Тунец в с/с', quantity: '2 банки', price: 200, checked: false, category: 'Консервы' },
+    { id: '5', name: 'Яйца', quantity: '10 шт', price: 90, checked: true, category: 'Молочные' },
+    { id: '6', name: 'Брокколи', quantity: '400 г', price: 150, checked: false, category: 'Овощи' },
+    { id: '7', name: 'Лук репчатый', quantity: '1 кг', price: 40, checked: false, category: 'Овощи' },
+    { id: '8', name: 'Морковь', quantity: '1 кг', price: 50, checked: true, category: 'Овощи' },
+  ]);
 
-  const toggleList = (listId) => {
-    setExpandedLists(prev => ({
-      ...prev,
-      [listId]: !prev[listId]
-    }));
-  };
-
-  const calculateListStats = (items) => {
-    const totalItems = items.length;
-    const checkedItems = items.filter(item => item.checked).length;
-    const totalCost = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    return { totalItems, checkedItems, totalCost };
-  };
-
-  const renderShoppingItem = ({ item, listId }) => (
-    <TouchableOpacity
-      style={[styles.shoppingItem, item.checked && styles.shoppingItemChecked]}
-      onPress={() => toggleShoppingItem(listId, item.id)}
-    >
-      <View style={styles.itemCheckbox}>
-        <Ionicons
-          name={item.checked ? "checkmark-circle" : "ellipse-outline"}
-          size={24}
-          color={item.checked ? COLORS.success : COLORS.textSecondary}
-        />
-      </View>
-      
-      <View style={styles.itemInfo}>
-        <Text style={[
-          styles.itemName,
-          item.checked && styles.itemNameChecked
-        ]}>
-          {item.name}
-        </Text>
-        <Text style={styles.itemDetails}>
-          {item.quantity} {item.unit} • {item.category}
-        </Text>
-      </View>
-      
-      <View style={styles.itemPrice}>
-        <Text style={[
-          styles.priceText,
-          item.checked && styles.priceTextChecked
-        ]}>
-          {(item.price * item.quantity).toFixed(0)} ₽
-        </Text>
-      </View>
-    </TouchableOpacity>
+  const [animatedValues] = useState(
+    shoppingItems.reduce((acc, item) => {
+      acc[item.id] = new Animated.Value(1);
+      return acc;
+    }, {})
   );
 
-  const renderShoppingList = ({ item: list }) => {
-    const isExpanded = expandedLists[list.id];
-    const stats = calculateListStats(list.items);
-    const progress = stats.totalItems > 0 ? (stats.checkedItems / stats.totalItems) * 100 : 0;
+  const toggleItem = (itemId) => {
+    // Анимация нажатия
+    Animated.sequence([
+      Animated.timing(animatedValues[itemId], {
+        toValue: 0.8,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(animatedValues[itemId], {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-    return (
-      <View style={styles.listCard}>
-        <TouchableOpacity
-          style={styles.listHeader}
-          onPress={() => toggleList(list.id)}
-        >
-          <View style={styles.listHeaderLeft}>
-            <View style={styles.listIcon}>
-              <Ionicons name="basket-outline" size={24} color={COLORS.primary} />
-            </View>
-            <View>
-              <Text style={styles.listTitle}>{list.title}</Text>
-              <Text style={styles.listSubtitle}>{list.date}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.listHeaderRight}>
-            <View style={styles.listStats}>
-              <Text style={styles.listStatsText}>
-                {stats.checkedItems}/{stats.totalItems}
-              </Text>
-              <Text style={styles.listCost}>
-                {stats.totalCost.toFixed(0)} ₽
-              </Text>
-            </View>
-            <Ionicons
-              name={isExpanded ? "chevron-up" : "chevron-down"}
-              size={20}
-              color={COLORS.textSecondary}
-            />
-          </View>
-        </TouchableOpacity>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[
-              styles.progressFill,
-              { width: `${progress}%` }
-            ]} />
-          </View>
-          <Text style={styles.progressText}>
-            {progress.toFixed(0)}% выполнено
-          </Text>
-        </View>
-
-        {/* Shopping Items */}
-        {isExpanded && (
-          <View style={styles.itemsContainer}>
-            <FlatList
-              data={list.items}
-              renderItem={({ item }) => renderShoppingItem({ item, listId: list.id })}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-            />
-          </View>
-        )}
-      </View>
+    setShoppingItems(items =>
+      items.map(item =>
+        item.id === itemId ? { ...item, checked: !item.checked } : item
+      )
     );
   };
+
+  const totalCost = shoppingItems.reduce((sum, item) => sum + item.price, 0);
+  const checkedItems = shoppingItems.filter(item => item.checked).length;
+  const progressPercentage = (checkedItems / shoppingItems.length) * 100;
+
+  // Группировка по категориям
+  const groupedItems = shoppingItems.reduce((acc, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+  }, {});
+
+  const renderShoppingItem = (item) => (
+    <Animated.View
+      key={item.id}
+      style={[
+        styles.shoppingItem,
+        item.checked && styles.shoppingItemChecked,
+        {
+          transform: [{ scale: animatedValues[item.id] }]
+        }
+      ]}
+    >
+      <TouchableOpacity
+        style={styles.itemTouchable}
+        onPress={() => toggleItem(item.id)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.itemCheckbox}>
+          <Ionicons
+            name={item.checked ? "checkmark-circle" : "ellipse-outline"}
+            size={24}
+            color={item.checked ? COLORS.success : COLORS.textSecondary}
+          />
+        </View>
+        
+        <View style={styles.itemInfo}>
+          <Text style={[
+            styles.itemName,
+            item.checked && styles.itemNameChecked
+          ]}>
+            {item.name}
+          </Text>
+          <Text style={styles.itemDetails}>
+            {item.quantity}
+          </Text>
+        </View>
+        
+        <View style={styles.itemPrice}>
+          <Text style={[
+            styles.priceText,
+            item.checked && styles.priceTextChecked
+          ]}>
+            {item.price} ₽
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
 
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Списки покупок</Text>
+          <Text style={styles.headerTitle}>Список покупок</Text>
           <Text style={styles.headerSubtitle}>
-            Meal prep на {shoppingLists.length} {shoppingLists.length === 1 ? 'день' : 'дня'}
+            Meal prep на 3 дня • {checkedItems}/{shoppingItems.length} готово
           </Text>
         </View>
 
-        {/* Shopping Lists */}
-        <View style={styles.listsContainer}>
-          <FlatList
-            data={shoppingLists}
-            renderItem={renderShoppingList}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-          />
+        {/* Progress */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <Animated.View style={[
+              styles.progressFill,
+              { width: `${progressPercentage}%` }
+            ]} />
+          </View>
+          <Text style={styles.progressText}>
+            {Math.round(progressPercentage)}% выполнено
+          </Text>
         </View>
 
-        {/* Add New List Button */}
-        <TouchableOpacity style={styles.addButton}>
+        {/* Shopping Items by Category */}
+        <View style={styles.itemsContainer}>
+          {Object.entries(groupedItems).map(([category, items]) => (
+            <View key={category} style={styles.categorySection}>
+              <View style={styles.categoryHeader}>
+                <Ionicons 
+                  name={getCategoryIcon(category)} 
+                  size={20} 
+                  color={COLORS.primary} 
+                />
+                <Text style={styles.categoryTitle}>{category}</Text>
+                <Text style={styles.categoryCount}>
+                  {items.filter(item => item.checked).length}/{items.length}
+                </Text>
+              </View>
+              
+              {items.map(renderShoppingItem)}
+            </View>
+          ))}
+        </View>
+
+        {/* Total */}
+        <View style={styles.totalContainer}>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Общая стоимость:</Text>
+            <Text style={styles.totalAmount}>{totalCost} ₽</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.budgetLabel}>Бюджет на неделю:</Text>
+            <Text style={[
+              styles.budgetAmount,
+              { color: totalCost <= 5000 ? COLORS.success : COLORS.warning }
+            ]}>
+              5000 ₽
+            </Text>
+          </View>
+          <View style={styles.progressBar}>
+            <View style={[
+              styles.budgetProgressFill,
+              { 
+                width: `${Math.min((totalCost / 5000) * 100, 100)}%`,
+                backgroundColor: totalCost <= 5000 ? COLORS.success : COLORS.warning
+              }
+            ]} />
+          </View>
+        </View>
+
+        {/* Action Button */}
+        <TouchableOpacity style={styles.actionButton}>
           <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
-          <Text style={styles.addButtonText}>Создать новый список</Text>
+          <Text style={styles.actionButtonText}>Добавить продукт</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
+};
+
+const getCategoryIcon = (category) => {
+  const icons = {
+    'Мясо': 'restaurant-outline',
+    'Молочные': 'water-outline',
+    'Крупы': 'nutrition-outline',
+    'Консервы': 'archive-outline',
+    'Овощи': 'leaf-outline',
+  };
+  return icons[category] || 'basket-outline';
 };
 
 const styles = StyleSheet.create({
@@ -176,79 +217,18 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '600',
     color: COLORS.text,
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-  },
-  listsContainer: {
-    padding: 16,
-  },
-  listCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  listHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  listHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  listIcon: {
-    width: 48,
-    height: 48,
-    backgroundColor: COLORS.background,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  listTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  listSubtitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  listHeaderRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  listStats: {
-    alignItems: 'flex-end',
-    marginRight: 8,
-  },
-  listStatsText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.text,
-  },
-  listCost: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 2,
   },
   progressContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    padding: 16,
+    backgroundColor: COLORS.surface,
   },
   progressBar: {
     height: 4,
@@ -261,24 +241,52 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.success,
     borderRadius: 2,
   },
+  budgetProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
   progressText: {
     fontSize: 12,
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
   itemsContainer: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    marginTop: 8,
   },
-  shoppingItem: {
+  categorySection: {
+    backgroundColor: COLORS.surface,
+    marginBottom: 8,
+  },
+  categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: COLORS.background,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginLeft: 8,
+    flex: 1,
+  },
+  categoryCount: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  shoppingItem: {
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   shoppingItemChecked: {
     opacity: 0.6,
+  },
+  itemTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
   },
   itemCheckbox: {
     marginRight: 12,
@@ -312,7 +320,38 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: COLORS.textSecondary,
   },
-  addButton: {
+  totalContainer: {
+    padding: 20,
+    backgroundColor: COLORS.surface,
+    marginTop: 8,
+    borderTopWidth: 2,
+    borderTopColor: COLORS.primary,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  totalAmount: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  budgetLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  budgetAmount: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -325,7 +364,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderStyle: 'dashed',
   },
-  addButtonText: {
+  actionButtonText: {
     fontSize: 16,
     fontWeight: '500',
     color: COLORS.primary,

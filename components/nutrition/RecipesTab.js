@@ -1,4 +1,5 @@
-import React, { useState, useContext } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,16 +7,17 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
-  Image,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/colors';
-import { NutritionContext } from '../../context/NutritionContext';
 import { recipesDatabase } from '../../data/recipesDatabase';
 
 const RecipesTab = ({ navigation }) => {
-  const { selectedCategory, setSelectedCategory } = useContext(NutritionContext);
-  const [recipes, setRecipes] = useState(recipesDatabase.getAllRecipes());
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [recipes, setRecipes] = useState([]);
+  const [fadeAnim] = useState(new Animated.Value(1));
+  const [slideAnim] = useState(new Animated.Value(0));
 
   const categories = [
     { id: 'all', name: 'Все', icon: 'grid-outline' },
@@ -27,86 +29,253 @@ const RecipesTab = ({ navigation }) => {
     { id: 'baking', name: 'Выпечка', icon: 'cafe-outline' },
   ];
 
-  const handleCategorySelect = (categoryId) => {
-    setSelectedCategory(categoryId);
-    if (categoryId === 'all') {
-      setRecipes(recipesDatabase.getAllRecipes());
-    } else {
-      setRecipes(recipesDatabase.getRecipesByCategory(categoryId));
+  useEffect(() => {
+    loadRecipes();
+  }, []);
+
+  const loadRecipes = () => {
+    try {
+      const allRecipes = recipesDatabase.getAllRecipes();
+      setRecipes(allRecipes);
+    } catch (error) {
+      console.log('Recipes database not ready, using mock data');
+      setRecipes(getMockRecipes());
     }
   };
 
-  const handleRecipePress = (recipe) => {
-    navigation.navigate('RecipeDetail', { recipe });
+  const getMockRecipes = () => [
+    {
+      id: '1',
+      name: 'Творожный хлеб',
+      description: 'Белковый хлеб из творога и овсянки для завтрака',
+      category: 'breakfast',
+      times: { total: 45 },
+      servings: 10,
+      nutrition: { calories: 120, protein: 15, carbs: 8, fat: 3 },
+      difficulty: 'easy',
+      tags: ['белковый', 'meal-prep'],
+    },
+    {
+      id: '2',
+      name: 'Куриный суп',
+      description: 'Сытный суп с курицей и овощами',
+      category: 'soups',
+      times: { total: 60 },
+      servings: 4,
+      nutrition: { calories: 200, protein: 25, carbs: 12, fat: 6 },
+      difficulty: 'medium',
+      tags: ['сытный', 'горячее'],
+    },
+    {
+      id: '3',
+      name: 'Салат с тунцом',
+      description: 'Легкий белковый салат с тунцом и овощами',
+      category: 'salads',
+      times: { total: 15 },
+      servings: 2,
+      nutrition: { calories: 180, protein: 22, carbs: 5, fat: 8 },
+      difficulty: 'easy',
+      tags: ['быстро', 'белковый'],
+    },
+    {
+      id: '4',
+      name: 'Хачапури',
+      description: 'Грузинская лепешка с творогом',
+      category: 'baking',
+      times: { total: 30 },
+      servings: 6,
+      nutrition: { calories: 250, protein: 18, carbs: 20, fat: 12 },
+      difficulty: 'medium',
+      tags: ['выпечка', 'сытно'],
+    },
+    {
+      id: '5',
+      name: 'Мини-пицца',
+      description: 'Белковая мини-пицца на творожной основе',
+      category: 'snacks',
+      times: { total: 20 },
+      servings: 4,
+      nutrition: { calories: 160, protein: 12, carbs: 10, fat: 8 },
+      difficulty: 'easy',
+      tags: ['перекус', 'быстро'],
+    },
+    {
+      id: '6',
+      name: 'Омлет с овощами',
+      description: 'Пышный омлет с брокколи и шпинатом',
+      category: 'breakfast',
+      times: { total: 15 },
+      servings: 2,
+      nutrition: { calories: 190, protein: 16, carbs: 6, fat: 12 },
+      difficulty: 'easy',
+      tags: ['завтрак', 'овощи'],
+    },
+    {
+      id: '7',
+      name: 'Куриная грудка гриль',
+      description: 'Сочная куриная грудка с травами',
+      category: 'main',
+      times: { total: 25 },
+      servings: 4,
+      nutrition: { calories: 220, protein: 35, carbs: 2, fat: 8 },
+      difficulty: 'medium',
+      tags: ['гриль', 'белковое'],
+    },
+  ];
+
+  const handleCategorySelect = (categoryId) => {
+    // Анимация исчезновения
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      // Меняем категорию и фильтруем рецепты
+      setSelectedCategory(categoryId);
+      
+      const allRecipes = recipes.length > 0 ? recipes : getMockRecipes();
+      const filteredRecipes = categoryId === 'all' 
+        ? allRecipes 
+        : allRecipes.filter(recipe => recipe.category === categoryId);
+      
+      setRecipes(filteredRecipes);
+
+      // Анимация появления
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    // Анимация слайда для категорий
+    Animated.timing(slideAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      slideAnim.setValue(0);
+    });
   };
 
-  const renderCategory = ({ item }) => (
-    <TouchableOpacity
+  const handleRecipePress = (recipe) => {
+    // Анимация нажатия
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0.7,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Здесь будет навигация к детальному экрану
+    console.log('Recipe pressed:', recipe.name);
+  };
+
+  const renderCategory = ({ item }) => {
+    const isActive = selectedCategory === item.id;
+    
+    return (
+      <TouchableOpacity
+        style={[
+          styles.categoryCard,
+          isActive && styles.categoryCardActive
+        ]}
+        onPress={() => handleCategorySelect(item.id)}
+        activeOpacity={0.7}
+      >
+        <Animated.View style={{
+          transform: [{
+            scale: isActive ? slideAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [1, 1.1],
+            }) : 1
+          }]
+        }}>
+          <Ionicons
+            name={item.icon}
+            size={24}
+            color={isActive ? COLORS.surface : COLORS.primary}
+          />
+        </Animated.View>
+        <Text style={[
+          styles.categoryText,
+          isActive && styles.categoryTextActive
+        ]}>
+          {item.name}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderRecipe = ({ item, index }) => (
+    <Animated.View
       style={[
-        styles.categoryCard,
-        selectedCategory === item.id && styles.categoryCardActive
+        styles.recipeCard,
+        {
+          opacity: fadeAnim,
+          transform: [{
+            translateY: fadeAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [20, 0],
+            })
+          }]
+        }
       ]}
-      onPress={() => handleCategorySelect(item.id)}
     >
-      <Ionicons
-        name={item.icon}
-        size={24}
-        color={selectedCategory === item.id ? COLORS.surface : COLORS.primary}
-      />
-      <Text style={[
-        styles.categoryText,
-        selectedCategory === item.id && styles.categoryTextActive
-      ]}>
-        {item.name}
-      </Text>
-    </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => handleRecipePress(item)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.recipeContent}>
+          <View style={styles.recipeImageContainer}>
+            <Ionicons name="image-outline" size={40} color={COLORS.textSecondary} />
+          </View>
+          
+          <View style={styles.recipeInfo}>
+            <Text style={styles.recipeName}>{item.name}</Text>
+            <Text style={styles.recipeDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+            
+            <View style={styles.recipeStats}>
+              <View style={styles.statItem}>
+                <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.statText}>{item.times.total} мин</Text>
+              </View>
+              
+              <View style={styles.statItem}>
+                <Ionicons name="restaurant-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.statText}>{item.servings} порций</Text>
+              </View>
+              
+              <View style={styles.statItem}>
+                <Ionicons name="flash-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.statText}>{item.nutrition.calories} ккал</Text>
+              </View>
+            </View>
+            
+            <View style={styles.tagsContainer}>
+              {item.tags?.slice(0, 2).map((tag, tagIndex) => (
+                <View key={tagIndex} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 
-  const renderRecipe = ({ item }) => (
-    <TouchableOpacity
-      style={styles.recipeCard}
-      onPress={() => handleRecipePress(item)}
-    >
-      <View style={styles.recipeImageContainer}>
-        <Ionicons name="image-outline" size={40} color={COLORS.textSecondary} />
-      </View>
-      
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName}>{item.name}</Text>
-        <Text style={styles.recipeDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-        
-        <View style={styles.recipeStats}>
-          <View style={styles.statItem}>
-            <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
-            <Text style={styles.statText}>{item.times.total} мин</Text>
-          </View>
-          
-          <View style={styles.statItem}>
-            <Ionicons name="restaurant-outline" size={16} color={COLORS.textSecondary} />
-            <Text style={styles.statText}>{item.servings} порций</Text>
-          </View>
-          
-          <View style={styles.statItem}>
-            <Ionicons name="flash-outline" size={16} color={COLORS.textSecondary} />
-            <Text style={styles.statText}>{item.nutrition.calories} ккал</Text>
-          </View>
-        </View>
-        
-        <View style={styles.difficultyContainer}>
-          <Text style={[
-            styles.difficultyText,
-            { color: item.difficulty === 'easy' ? COLORS.success : 
-                     item.difficulty === 'medium' ? COLORS.warning : COLORS.danger }
-          ]}>
-            {item.difficulty === 'easy' ? 'Легко' : 
-             item.difficulty === 'medium' ? 'Средне' : 'Сложно'}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+  const filteredRecipes = selectedCategory === 'all' 
+    ? recipes 
+    : recipes.filter(recipe => recipe.category === selectedCategory);
 
   return (
     <View style={styles.container}>
@@ -130,12 +299,12 @@ const RecipesTab = ({ navigation }) => {
              categories.find(c => c.id === selectedCategory)?.name}
           </Text>
           <Text style={styles.recipesCount}>
-            {recipes.length} {recipes.length === 1 ? 'рецепт' : 'рецептов'}
+            {filteredRecipes.length} {filteredRecipes.length === 1 ? 'рецепт' : 'рецептов'}
           </Text>
         </View>
 
         <FlatList
-          data={recipes}
+          data={filteredRecipes}
           renderItem={renderRecipe}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
@@ -175,6 +344,11 @@ const styles = StyleSheet.create({
   categoryCardActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   categoryText: {
     fontSize: 12,
@@ -209,16 +383,18 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   recipeCard: {
-    flexDirection: 'row',
     backgroundColor: COLORS.surface,
     borderRadius: 12,
-    padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  recipeContent: {
+    flexDirection: 'row',
+    padding: 16,
   },
   recipeImageContainer: {
     width: 80,
@@ -258,11 +434,19 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginLeft: 4,
   },
-  difficultyContainer: {
-    alignSelf: 'flex-start',
+  tagsContainer: {
+    flexDirection: 'row',
   },
-  difficultyText: {
-    fontSize: 12,
+  tag: {
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  tagText: {
+    fontSize: 10,
+    color: COLORS.primary,
     fontWeight: '500',
   },
 });

@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/colors';
 import MealsTab from '../components/nutrition/MealsTab';
 import RecipesTab from '../components/nutrition/RecipesTab';
@@ -14,12 +16,13 @@ import ShoppingTab from '../components/nutrition/ShoppingTab';
 const NutritionScreen = () => {
   const [activeTab, setActiveTab] = useState('meals');
 
-  const handleTabPress = (tabName) => {
-    console.log('Tab pressed:', tabName);
-    setActiveTab(tabName);
-  };
+  const tabs = [
+    { id: 'meals', label: 'Приемы пищи', icon: 'restaurant-outline' },
+    { id: 'recipes', label: 'Рецепты', icon: 'book-outline' },
+    { id: 'shopping', label: 'Корзина', icon: 'basket-outline' },
+  ];
 
-  const renderContent = () => {
+  const renderTabContent = () => {
     switch (activeTab) {
       case 'meals':
         return <MealsTab />;
@@ -34,47 +37,41 @@ const NutritionScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Заголовок экрана */}
-      <View style={styles.screenHeader}>
-        <Text style={styles.screenTitle}>🍽️ Питание</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Питание</Text>
+        <Text style={styles.headerSubtitle}>Система "10 контейнеров"</Text>
       </View>
 
-      {/* Табы */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'meals' && styles.activeTab]}
-          onPress={() => handleTabPress('meals')}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.tabText, activeTab === 'meals' && styles.activeTabText]}>
-            Приемы пищи
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'recipes' && styles.activeTab]}
-          onPress={() => handleTabPress('recipes')}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.tabText, activeTab === 'recipes' && styles.activeTabText]}>
-            Рецепты
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'shopping' && styles.activeTab]}
-          onPress={() => handleTabPress('shopping')}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.tabText, activeTab === 'shopping' && styles.activeTabText]}>
-            Корзина
-          </Text>
-        </TouchableOpacity>
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.id}
+            style={[
+              styles.tab,
+              activeTab === tab.id && styles.activeTab
+            ]}
+            onPress={() => setActiveTab(tab.id)}
+          >
+            <Ionicons
+              name={tab.icon}
+              size={20}
+              color={activeTab === tab.id ? COLORS.primary : COLORS.textSecondary}
+            />
+            <Text style={[
+              styles.tabText,
+              activeTab === tab.id && styles.activeTabText
+            ]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* Контент */}
-      <View style={styles.contentContainer}>
-        {renderContent()}
+      {/* Tab Content */}
+      <View style={styles.content}>
+        {renderTabContent()}
       </View>
     </SafeAreaView>
   );
@@ -85,49 +82,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  screenHeader: {
+  header: {
+    padding: 20,
     backgroundColor: COLORS.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
     color: COLORS.text,
+    marginBottom: 4,
   },
-  tabContainer: {
+  headerSubtitle: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+  },
+  tabsContainer: {
     flexDirection: 'row',
     backgroundColor: COLORS.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   tab: {
     flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 10,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
-    marginHorizontal: 5,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
   },
   activeTab: {
+    borderBottomWidth: 2,
     borderBottomColor: COLORS.primary,
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 14,
     color: COLORS.textSecondary,
+    marginLeft: 6,
     fontWeight: '500',
-    textAlign: 'center',
   },
   activeTabText: {
     color: COLORS.primary,
-    fontWeight: '600',
   },
-  contentContainer: {
+  content: {
     flex: 1,
   },
 });

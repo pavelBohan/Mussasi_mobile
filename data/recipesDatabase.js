@@ -1,409 +1,404 @@
-import { ProductsService } from './productsDatabase';
 
-// База данных рецептов для системы питания Mussasi
-export const RECIPES_DATABASE = {
-  // Салаты
-  tuna_salad: {
-    id: 'tuna_salad',
-    name: 'Салат с тунцом',
-    category: 'salads',
-    difficulty: 'easy',
-    prepTime: 15, // минуты
-    cookTime: 0,
-    totalTime: 15,
-    servings: 1,
-    description: 'Легкий и питательный салат с высоким содержанием белка',
-    
-    ingredients: [
-      { productId: 'tuna_canned', amount: 185, unit: 'г', note: '1 банка' },
-      { productId: 'cucumber', amount: 200, unit: 'г', note: '2 средних огурца' },
-      { productId: 'tomato', amount: 200, unit: 'г', note: '2 средних помидора' },
-      { productId: 'lettuce', amount: 100, unit: 'г', note: '1 упаковка' }
-    ],
+// data/recipesDatabase.js - РАСШИРЕННАЯ ВЕРСИЯ
 
-    instructions: [
-      {
-        step: 1,
-        title: 'Подготовка овощей',
-        description: 'Огурцы нарезать кубиками, помидоры - дольками, салат порвать руками',
-        time: 8,
-        equipment: ['нож', 'разделочная доска'],
-        tips: ['Огурцы можно не чистить', 'Помидоры лучше брать плотные']
-      },
-      {
-        step: 2,
-        title: 'Подготовка тунца',
-        description: 'Слить жидкость с тунца, размять вилкой на крупные кусочки',
-        time: 3,
-        equipment: ['вилка', 'миска'],
-        tips: ['Не размельчать слишком мелко']
-      },
-      {
-        step: 3,
-        title: 'Сборка салата',
-        description: 'Смешать все ингредиенты в большой миске, аккуратно перемешать',
-        time: 4,
-        equipment: ['большая миска'],
-        tips: ['Можно добавить немного лимонного сока']
-      }
-    ],
-
-    nutrition: {
-      calories: 240,
-      protein: 20,
-      carbs: 8,
-      fat: 12,
-      fiber: 4,
-      sugar: 6
-    },
-
-    insulin: 2,
-    glycemicLoad: 3,
-    
-    tags: ['high-protein', 'low-carb', 'quick', 'no-cook', 'diabetic-friendly'],
-    allergens: ['fish'],
-    
-    storage: {
-      refrigerator: 2, // дни
-      freezer: 0, // не замораживается
-      tips: ['Лучше съесть сразу', 'Можно хранить без заправки']
-    },
-
-    variations: [
-      {
-        name: 'С авокадо',
-        changes: [{ productId: 'avocado', amount: 100, unit: 'г' }],
-        nutritionDelta: { calories: +160, fat: +15 }
-      }
-    ],
-
-    cost: {
-      estimated: 180, // рублей за порцию
-      breakdown: [
-        { productId: 'tuna_canned', cost: 80 },
-        { productId: 'cucumber', cost: 36 },
-        { productId: 'tomato', cost: 60 },
-        { productId: 'lettuce', cost: 30 }
-      ]
-    }
-  },
-
-  // Выпечка
-  protein_bread: {
-    id: 'protein_bread',
+const recipes = [
+  // ЗАВТРАКИ
+  {
+    id: 'cottage-cheese-bread',
     name: 'Творожный хлеб',
-    category: 'baking',
-    difficulty: 'medium',
-    prepTime: 15,
-    cookTime: 45,
-    totalTime: 60,
+    category: 'breakfast',
+    difficulty: 'easy',
+    times: {
+      prep: 10,
+      cook: 35,
+      total: 45,
+    },
     servings: 10,
-    description: 'Высокобелковый хлеб без муки на основе творога',
-
+    description: 'Белковый хлеб из творога и овсянки. Идеален для meal prep - можно заморозить и размораживать по кусочку.',
     ingredients: [
-      { productId: 'cottage_cheese_0', amount: 500, unit: 'г', note: 'комнатной температуры' },
-      { productId: 'oat_flakes', amount: 200, unit: 'г', note: 'измельчить в муку' },
-      { productId: 'eggs', amount: 3, unit: 'шт', note: 'крупные' },
-      { productId: 'sugar_substitute', amount: 20, unit: 'г', note: 'по вкусу' }
+      { productId: 'cottage-cheese-0', quantity: 500, unit: 'г' },
+      { productId: 'oat-flour', quantity: 200, unit: 'г' },
+      { productId: 'eggs', quantity: 2, unit: 'шт' },
     ],
-
-    equipment: [
-      { name: 'Блендер или кофемолка', required: true, alternative: 'Можно купить овсяную муку' },
-      { name: 'Форма для выпечки', required: true, size: '20x10 см' },
-      { name: 'Духовка', required: true, temp: '180°C' },
-      { name: 'Миксер', required: false, alternative: 'Венчик' }
-    ],
-
     instructions: [
-      {
-        step: 1,
-        title: 'Подготовка ингредиентов',
-        description: 'Измельчить овсяные хлопья в муку, достать творог из холодильника',
-        time: 10,
-        equipment: ['блендер'],
-        tips: ['Творог должен быть комнатной температуры', 'Овсяную муку можно просеять']
-      },
-      {
-        step: 2,
-        title: 'Смешивание теста',
-        description: 'Смешать творог с яйцами, добавить овсяную муку и заменитель сахара',
-        time: 8,
-        equipment: ['миска', 'венчик'],
-        tips: ['Тесто должно быть однородным', 'Не перемешивать слишком долго']
-      },
-      {
-        step: 3,
-        title: 'Подготовка формы',
-        description: 'Смазать форму или застелить пергаментом',
-        time: 2,
-        equipment: ['форма для выпечки', 'пергамент'],
-        tips: ['Можно использовать силиконовую форму без смазки']
-      },
-      {
-        step: 4,
-        title: 'Выпекание',
-        description: 'Выпекать при 180°C 45 минут до золотистой корочки',
-        time: 45,
-        equipment: ['духовка'],
-        tips: ['Проверить готовность зубочисткой', 'Не открывать духовку первые 30 минут'],
-        timer: {
-          name: 'Выпекание творожного хлеба',
-          duration: 45,
-          alerts: [
-            { time: 30, message: 'Проверить цвет корочки' },
-            { time: 40, message: 'Подготовить зубочистку для проверки' }
-          ]
-        }
-      },
-      {
-        step: 5,
-        title: 'Охлаждение',
-        description: 'Остудить в форме 10 минут, затем переложить на решетку',
-        time: 15,
-        equipment: ['решетка для охлаждения'],
-        tips: ['Не вынимать горячим', 'Полностью остудить перед нарезкой']
-      }
+      { text: 'Разогреть духовку до 180°C', timer: null },
+      { text: 'Смешать творог с яйцами до однородности', timer: 3 },
+      { text: 'Добавить овсяную муку, перемешать', timer: 2 },
+      { text: 'Выложить в форму, выпекать', timer: 35 },
+      { text: 'Остудить, нарезать на 10 кусочков', timer: null },
     ],
-
+    equipment: ['Духовка', 'Форма для выпечки', 'Миксер'],
     nutrition: {
-      calories: 120, // на кусок
+      calories: 120,
       protein: 15,
       carbs: 8,
       fat: 3,
       fiber: 2,
-      sugar: 1
+      sugar: 2,
     },
-
-    insulin: 2, // на кусок
-    glycemicLoad: 4,
-
-    tags: ['high-protein', 'gluten-free', 'meal-prep', 'diabetic-friendly', 'homemade'],
-    allergens: ['dairy', 'eggs'],
-
-    storage: {
-      refrigerator: 5,
-      freezer: 30,
-      tips: ['Нарезать и заморозить порциями', 'Размораживать при комнатной температуре']
-    },
-
+    insulin: 2, // на порцию
+    tags: ['белковый', 'meal-prep', 'завтрак', 'выпечка'],
+    allergens: ['молоко', 'яйца', 'глютен'],
+    storage: '5 дней в холодильнике, 1 месяц в морозилке',
     variations: [
-      {
-        name: 'С зеленью',
-        changes: [{ productId: 'herbs', amount: 30, unit: 'г' }],
-        nutritionDelta: { calories: +5 }
-      },
-      {
-        name: 'Сладкий вариант',
-        changes: [{ productId: 'sugar_substitute', amount: 40, unit: 'г' }],
-        nutritionDelta: { calories: 0 }
-      }
+      'С добавлением корицы',
+      'С семенами чиа',
+      'Мини-булочки вместо хлеба',
     ],
-
-    cost: {
-      estimated: 25, // за кусок
-      breakdown: [
-        { productId: 'cottage_cheese_0', cost: 90 },
-        { productId: 'oat_flakes', cost: 34 },
-        { productId: 'eggs', cost: 36 },
-        { productId: 'sugar_substitute', cost: 8 }
-      ]
-    }
+    cost: 180, // на весь рецепт
+  },
+  {
+    id: 'protein-omelet',
+    name: 'Белковый омлет с овощами',
+    category: 'breakfast',
+    difficulty: 'easy',
+    times: {
+      prep: 5,
+      cook: 10,
+      total: 15,
+    },
+    servings: 2,
+    description: 'Пышный омлет с брокколи и шпинатом. Быстрый и сытный завтрак.',
+    ingredients: [
+      { productId: 'eggs', quantity: 4, unit: 'шт' },
+      { productId: 'broccoli', quantity: 100, unit: 'г' },
+      { productId: 'spinach', quantity: 50, unit: 'г' },
+    ],
+    instructions: [
+      { text: 'Отварить брокколи до мягкости', timer: 5 },
+      { text: 'Взбить яйца с солью и перцем', timer: 2 },
+      { text: 'Обжарить шпинат на сковороде', timer: 1 },
+      { text: 'Добавить яйца, готовить под крышкой', timer: 5 },
+      { text: 'Добавить брокколи, довести до готовности', timer: 2 },
+    ],
+    equipment: ['Сковорода', 'Венчик', 'Кастрюля'],
+    nutrition: {
+      calories: 190,
+      protein: 16,
+      carbs: 6,
+      fat: 12,
+      fiber: 3,
+      sugar: 2,
+    },
+    insulin: 1,
+    tags: ['быстро', 'белковый', 'овощи', 'завтрак'],
+    allergens: ['яйца'],
+    storage: '2 дня в холодильнике',
+    variations: [
+      'С помидорами черри',
+      'С сыром',
+      'С грибами',
+    ],
+    cost: 80,
   },
 
-  khachapuri: {
-    id: 'khachapuri',
-    name: 'Хачапури из творожного теста',
-    category: 'baking',
+  // СУПЫ
+  {
+    id: 'chicken-soup',
+    name: 'Куриный суп с овощами',
+    category: 'soups',
     difficulty: 'medium',
-    prepTime: 20,
-    cookTime: 25,
-    totalTime: 45,
+    times: {
+      prep: 15,
+      cook: 45,
+      total: 60,
+    },
     servings: 6,
-    description: 'Грузинские лепешки с сыром из полезного творожного теста',
-
+    description: 'Сытный суп с курицей и овощами. Отлично подходит для meal prep.',
     ingredients: [
-      { productId: 'cottage_cheese_5', amount: 300, unit: 'г', note: 'для теста' },
-      { productId: 'oat_flakes', amount: 100, unit: 'г', note: 'измельчить в муку' },
-      { productId: 'eggs', amount: 2, unit: 'шт', note: '1 в тесто, 1 для смазки' },
-      { productId: 'cheese_light', amount: 200, unit: 'г', note: 'для начинки, тертый' }
+      { productId: 'chicken-fillet', quantity: 400, unit: 'г' },
+      { productId: 'carrots', quantity: 200, unit: 'г' },
+      { productId: 'onions', quantity: 150, unit: 'г' },
+      { productId: 'broccoli', quantity: 200, unit: 'г' },
     ],
-
-    equipment: [
-      { name: 'Блендер', required: true, alternative: 'Овсяная мука' },
-      { name: 'Противень', required: true, size: 'стандартный' },
-      { name: 'Духовка', required: true, temp: '200°C' }
-    ],
-
     instructions: [
-      {
-        step: 1,
-        title: 'Приготовление теста',
-        description: 'Смешать творог, овсяную муку и 1 яйцо до однородности',
-        time: 8,
-        equipment: ['миска', 'венчик'],
-        tips: ['Тесто должно быть эластичным', 'При необходимости добавить немного муки']
-      },
-      {
-        step: 2,
-        title: 'Формирование лепешек',
-        description: 'Разделить тесто на 6 частей, раскатать в лепешки',
-        time: 10,
-        equipment: ['скалка', 'рабочая поверхность'],
-        tips: ['Лепешки должны быть тонкими', 'Присыпать мукой при раскатывании']
-      },
-      {
-        step: 3,
-        title: 'Добавление начинки',
-        description: 'На половину каждой лепешки выложить тертый сыр, накрыть второй половиной',
-        time: 5,
-        equipment: [],
-        tips: ['Не переборщить с начинкой', 'Хорошо защипать края']
-      },
-      {
-        step: 4,
-        title: 'Выпекание',
-        description: 'Смазать взбитым яйцом, выпекать 20-25 минут до золотистого цвета',
-        time: 25,
-        equipment: ['противень', 'кисточка'],
-        tips: ['Следить за цветом', 'Не пересушить'],
-        timer: {
-          name: 'Выпекание хачапури',
-          duration: 25,
-          alerts: [
-            { time: 15, message: 'Проверить цвет' },
-            { time: 20, message: 'Почти готово' }
-          ]
-        }
-      }
+      { text: 'Нарезать курицу кубиками, обжарить', timer: 8 },
+      { text: 'Добавить нарезанный лук, обжарить', timer: 5 },
+      { text: 'Добавить морковь, тушить', timer: 5 },
+      { text: 'Залить водой, варить', timer: 20 },
+      { text: 'Добавить брокколи, варить до готовности', timer: 7 },
     ],
+    equipment: ['Кастрюля', 'Нож', 'Доска'],
+    nutrition: {
+      calories: 200,
+      protein: 25,
+      carbs: 12,
+      fat: 6,
+      fiber: 4,
+      sugar: 6,
+    },
+    insulin: 2,
+    tags: ['сытный', 'горячее', 'meal-prep', 'овощи'],
+    allergens: [],
+    storage: '4 дня в холодильнике, 3 месяца в морозилке',
+    variations: [
+      'С лапшой',
+      'С картофелем',
+      'Крем-суп',
+    ],
+    cost: 320,
+  },
 
+  // ОСНОВНЫЕ БЛЮДА
+  {
+    id: 'grilled-chicken',
+    name: 'Куриная грудка гриль',
+    category: 'main',
+    difficulty: 'medium',
+    times: {
+      prep: 10,
+      cook: 15,
+      total: 25,
+    },
+    servings: 4,
+    description: 'Сочная куриная грудка с травами. Базовое блюдо для meal prep.',
+    ingredients: [
+      { productId: 'chicken-fillet', quantity: 600, unit: 'г' },
+    ],
+    instructions: [
+      { text: 'Отбить филе, посолить и поперчить', timer: 5 },
+      { text: 'Разогреть сковороду-гриль', timer: 3 },
+      { text: 'Обжарить с одной стороны', timer: 6 },
+      { text: 'Перевернуть, жарить до готовности', timer: 6 },
+      { text: 'Дать отдохнуть перед нарезкой', timer: 5 },
+    ],
+    equipment: ['Сковорода-гриль', 'Молоток для отбивания'],
+    nutrition: {
+      calories: 220,
+      protein: 35,
+      carbs: 2,
+      fat: 8,
+      fiber: 0,
+      sugar: 0,
+    },
+    insulin: 0,
+    tags: ['гриль', 'белковое', 'meal-prep', 'диетическое'],
+    allergens: [],
+    storage: '4 дня в холодильнике, 3 месяца в морозилке',
+    variations: [
+      'В маринаде',
+      'С лимоном и травами',
+      'В духовке',
+    ],
+    cost: 210,
+  },
+
+  // САЛАТЫ
+  {
+    id: 'tuna-salad',
+    name: 'Салат с тунцом',
+    category: 'salads',
+    difficulty: 'easy',
+    times: {
+      prep: 15,
+      cook: 0,
+      total: 15,
+    },
+    servings: 4,
+    description: 'Легкий белковый салат с тунцом и свежими овощами.',
+    ingredients: [
+      { productId: 'tuna-canned', quantity: 370, unit: 'г' }, // 2 банки
+      { productId: 'cucumbers', quantity: 200, unit: 'г' },
+      { productId: 'tomatoes', quantity: 200, unit: 'г' },
+      { productId: 'onions', quantity: 50, unit: 'г' },
+    ],
+    instructions: [
+      { text: 'Слить жидкость с тунца', timer: null },
+      { text: 'Нарезать огурцы кубиками', timer: 3 },
+      { text: 'Нарезать помидоры кубиками', timer: 3 },
+      { text: 'Мелко нарезать лук', timer: 2 },
+      { text: 'Смешать все ингредиенты', timer: 2 },
+    ],
+    equipment: ['Нож', 'Доска', 'Миска'],
     nutrition: {
       calories: 180,
-      protein: 12,
-      carbs: 15,
+      protein: 22,
+      carbs: 5,
       fat: 8,
       fiber: 2,
-      sugar: 2
+      sugar: 4,
     },
+    insulin: 1,
+    tags: ['быстро', 'белковый', 'свежий', 'meal-prep'],
+    allergens: ['рыба'],
+    storage: '3 дня в холодильнике',
+    variations: [
+      'С авокадо',
+      'С яйцом',
+      'С зеленью',
+    ],
+    cost: 280,
+  },
 
-    insulin: 3,
-    glycemicLoad: 6,
-
-    tags: ['traditional', 'cheese', 'comfort-food', 'meal-prep'],
-    allergens: ['dairy', 'eggs'],
-
-    storage: {
-      refrigerator: 3,
-      freezer: 14,
-      tips: ['Разогревать в духовке', 'Можно заморозить после выпечки']
+  // ВЫПЕЧКА
+  {
+    id: 'khachapuri',
+    name: 'Хачапури с творогом',
+    category: 'baking',
+    difficulty: 'medium',
+    times: {
+      prep: 20,
+      cook: 10,
+      total: 30,
     },
+    servings: 6,
+    description: 'Грузинская лепешка с творожной начинкой на овсяной основе.',
+    ingredients: [
+      { productId: 'oat-flour', quantity: 150, unit: 'г' },
+      { productId: 'cottage-cheese-5', quantity: 300, unit: 'г' },
+      { productId: 'eggs', quantity: 1, unit: 'шт' },
+    ],
+    instructions: [
+      { text: 'Смешать муку с водой до теста', timer: 5 },
+      { text: 'Смешать творог с яйцом', timer: 3 },
+      { text: 'Раскатать тесто, добавить начинку', timer: 8 },
+      { text: 'Сформировать лепешки', timer: 4 },
+      { text: 'Жарить на сковороде с двух сторон', timer: 10 },
+    ],
+    equipment: ['Сковорода', 'Скалка', 'Миска'],
+    nutrition: {
+      calories: 250,
+      protein: 18,
+      carbs: 20,
+      fat: 12,
+      fiber: 3,
+      sugar: 3,
+    },
+    insulin: 4,
+    tags: ['выпечка', 'сытно', 'традиционное', 'белковое'],
+    allergens: ['молоко', 'яйца', 'глютен'],
+    storage: '3 дня в холодильнике',
+    variations: [
+      'С зеленью',
+      'Мини-хачапури',
+      'В духовке',
+    ],
+    cost: 150,
+  },
 
-    cost: {
-      estimated: 45,
-      breakdown: [
-        { productId: 'cottage_cheese_5', cost: 48 },
-        { productId: 'oat_flakes', cost: 17 },
-        { productId: 'eggs', cost: 24 },
-        { productId: 'cheese_light', cost: 170 }
-      ]
-    }
+  // ПЕРЕКУСЫ
+  {
+    id: 'mini-pizza',
+    name: 'Мини-пицца белковая',
+    category: 'snacks',
+    difficulty: 'easy',
+    times: {
+      prep: 10,
+      cook: 10,
+      total: 20,
+    },
+    servings: 4,
+    description: 'Белковая мини-пицца на творожной основе.',
+    ingredients: [
+      { productId: 'cottage-cheese-0', quantity: 200, unit: 'г' },
+      { productId: 'oat-flour', quantity: 50, unit: 'г' },
+      { productId: 'tomato-paste', quantity: 40, unit: 'г' },
+      { productId: 'eggs', quantity: 1, unit: 'шт' },
+    ],
+    instructions: [
+      { text: 'Смешать творог, муку и яйцо', timer: 3 },
+      { text: 'Сформировать основы для пиццы', timer: 4 },
+      { text: 'Смазать томатной пастой', timer: 1 },
+      { text: 'Выпекать в духовке при 200°C', timer: 10 },
+      { text: 'Остудить перед подачей', timer: 2 },
+    ],
+    equipment: ['Духовка', 'Противень', 'Миска'],
+    nutrition: {
+      calories: 160,
+      protein: 12,
+      carbs: 10,
+      fat: 8,
+      fiber: 2,
+      sugar: 3,
+    },
+    insulin: 2,
+    tags: ['перекус', 'быстро', 'белковое', 'детям'],
+    allergens: ['молоко', 'яйца', 'глютен'],
+    storage: '2 дня в холодильнике',
+    variations: [
+      'С овощами',
+      'С зеленью',
+      'Острая версия',
+    ],
+    cost: 120,
+  },
+];
+
+class RecipesDatabase {
+  static getAllRecipes() {
+    return recipes;
   }
-};
 
-// Сервис для работы с рецептами
-export const RecipesService = {
-  // Получить рецепт по ID
-  getRecipe: (recipeId) => {
-    return RECIPES_DATABASE[recipeId] || null;
-  },
+  static getRecipeById(id) {
+    return recipes.find(recipe => recipe.id === id);
+  }
 
-  // Получить рецепты по категории
-  getRecipesByCategory: (category) => {
-    return Object.values(RECIPES_DATABASE).filter(
-      recipe => recipe.category === category
-    );
-  },
+  static getRecipesByCategory(category) {
+    return recipes.filter(recipe => recipe.category === category);
+  }
 
-  // Поиск рецептов
-  searchRecipes: (query) => {
-    const lowercaseQuery = query.toLowerCase();
-    return Object.values(RECIPES_DATABASE).filter(recipe =>
-      recipe.name.toLowerCase().includes(lowercaseQuery) ||
-      recipe.description.toLowerCase().includes(lowercaseQuery) ||
-      recipe.tags.some(tag => tag.includes(lowercaseQuery))
-    );
-  },
+  static getRecipesByDifficulty(difficulty) {
+    return recipes.filter(recipe => recipe.difficulty === difficulty);
+  }
 
-  // Расчет КБЖУ рецепта на указанное количество порций
-  calculateRecipeNutrition: (recipeId, servings = 1) => {
-    const recipe = RECIPES_DATABASE[recipeId];
-    if (!recipe) return null;
-
-    const multiplier = servings / recipe.servings;
-    
-    return {
-      calories: Math.round(recipe.nutrition.calories * multiplier),
-      protein: Math.round(recipe.nutrition.protein * multiplier * 10) / 10,
-      carbs: Math.round(recipe.nutrition.carbs * multiplier * 10) / 10,
-      fat: Math.round(recipe.nutrition.fat * multiplier * 10) / 10,
-      fiber: Math.round(recipe.nutrition.fiber * multiplier * 10) / 10,
-      sugar: Math.round(recipe.nutrition.sugar * multiplier * 10) / 10
-    };
-  },
-
-  // Расчет стоимости рецепта
-  calculateRecipeCost: (recipeId, servings = 1) => {
-    const recipe = RECIPES_DATABASE[recipeId];
-    if (!recipe || !recipe.cost) return null;
-
-    const multiplier = servings / recipe.servings;
-    return Math.round(recipe.cost.estimated * multiplier);
-  },
-
-  // Получить список покупок для рецепта
-  getShoppingList: (recipeId, servings = 1) => {
-    const recipe = RECIPES_DATABASE[recipeId];
-    if (!recipe) return [];
-
-    const multiplier = servings / recipe.servings;
-
-    return recipe.ingredients.map(ingredient => {
-      const product = ProductsService.getProduct(ingredient.productId);
-      return {
-        productId: ingredient.productId,
-        productName: product?.name || 'Неизвестный продукт',
-        amount: Math.round(ingredient.amount * multiplier * 10) / 10,
-        unit: ingredient.unit,
-        note: ingredient.note,
-        estimatedPrice: product?.averagePrice || 0
-      };
-    });
-  },
-
-  // Получить рецепты по тегам
-  getRecipesByTags: (tags) => {
-    return Object.values(RECIPES_DATABASE).filter(recipe =>
+  static getRecipesByTags(tags) {
+    return recipes.filter(recipe =>
       tags.some(tag => recipe.tags.includes(tag))
     );
-  },
-
-  // Получить рецепты по времени приготовления
-  getRecipesByTime: (maxTime) => {
-    return Object.values(RECIPES_DATABASE).filter(
-      recipe => recipe.totalTime <= maxTime
-    );
-  },
-
-  // Получить рецепты без аллергенов
-  getRecipesWithoutAllergens: (allergens) => {
-    return Object.values(RECIPES_DATABASE).filter(recipe =>
-      !recipe.allergens.some(allergen => allergens.includes(allergen))
-    );
-  },
-
-  // Получить все категории рецептов
-  getCategories: () => {
-    const categories = [...new Set(Object.values(RECIPES_DATABASE).map(r => r.category))];
-    return categories;
   }
-};
+
+  static searchRecipes(query) {
+    const lowercaseQuery = query.toLowerCase();
+    return recipes.filter(recipe =>
+      recipe.name.toLowerCase().includes(lowercaseQuery) ||
+      recipe.description.toLowerCase().includes(lowercaseQuery) ||
+      recipe.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+    );
+  }
+
+  static getRecipesByTime(maxTime) {
+    return recipes.filter(recipe => recipe.times.total <= maxTime);
+  }
+
+  static getRecipesByCalories(minCal, maxCal) {
+    return recipes.filter(recipe =>
+      recipe.nutrition.calories >= minCal &&
+      recipe.nutrition.calories <= maxCal
+    );
+  }
+
+  static getCategories() {
+    const categories = [...new Set(recipes.map(recipe => recipe.category))];
+    return categories.map(category => ({
+      id: category,
+      name: this.getCategoryName(category),
+      count: recipes.filter(r => r.category === category).length,
+    }));
+  }
+
+  static getCategoryName(category) {
+    const names = {
+      breakfast: 'Завтраки',
+      soups: 'Супы',
+      main: 'Основные блюда',
+      salads: 'Салаты',
+      snacks: 'Перекусы',
+      baking: 'Выпечка',
+    };
+    return names[category] || category;
+  }
+
+  static getMealPrepRecipes() {
+    return recipes.filter(recipe => recipe.tags.includes('meal-prep'));
+  }
+
+  static getQuickRecipes(maxTime = 20) {
+    return recipes.filter(recipe => recipe.times.total <= maxTime);
+  }
+
+  static getHighProteinRecipes(minProtein = 15) {
+    return recipes.filter(recipe => recipe.nutrition.protein >= minProtein);
+  }
+}
+
+export { RecipesDatabase as recipesDatabase };
