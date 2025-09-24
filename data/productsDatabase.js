@@ -1,8 +1,8 @@
 
-// data/productsDatabase.js - РАСШИРЕННАЯ ВЕРСИЯ
+// data/productsDatabase.js - ПОЛНАЯ ВЕРСИЯ ДЛЯ ВАШЕГО МЕНЮ
 
 const products = [
-  // БЕЛКИ - Мясо и птица
+  // === БЕЛКИ - МЯСО И ПТИЦА ===
   {
     id: 'chicken-fillet',
     name: 'Куриное филе',
@@ -21,10 +21,11 @@ const products = [
     storageInfo: {
       fresh: '2-3 дня в холодильнике',
       frozen: '6 месяцев в морозилке',
+      cooked: '4 дня в холодильнике',
     },
     averagePrice: 350, // за кг
     allergens: [],
-    tags: ['белковый', 'диетический', 'meal-prep'],
+    tags: ['белковый', 'диетический', 'meal-prep', 'основа'],
   },
   {
     id: 'chicken-breast-smoked',
@@ -49,34 +50,11 @@ const products = [
     allergens: [],
     tags: ['готовый', 'белковый', 'удобно'],
   },
-  {
-    id: 'beef',
-    name: 'Говядина',
-    category: 'meat',
-    unit: 'г',
-    nutrition: {
-      calories: 187,
-      protein: 18.9,
-      carbs: 0,
-      fat: 12.4,
-      fiber: 0,
-      sugar: 0,
-    },
-    glycemicIndex: 0,
-    insulinIndex: 51,
-    storageInfo: {
-      fresh: '3-5 дней в холодильнике',
-      frozen: '6-12 месяцев в морозилке',
-    },
-    averagePrice: 600,
-    allergens: [],
-    tags: ['белковый', 'железо', 'сытный'],
-  },
 
-  // БЕЛКИ - Рыба и морепродукты
+  // === БЕЛКИ - РЫБА И МОРЕПРОДУКТЫ ===
   {
     id: 'tuna-canned',
-    name: 'Тунец в с/с',
+    name: 'Тунец в собственном соку',
     category: 'fish',
     unit: 'г',
     nutrition: {
@@ -90,12 +68,12 @@ const products = [
     glycemicIndex: 0,
     insulinIndex: 50,
     storageInfo: {
-      canned: '2-3 года при комнатной температуре',
+      canned: '3 года при комнатной температуре',
       opened: '2-3 дня в холодильнике',
     },
     averagePrice: 100, // за банку 185г
     allergens: ['рыба'],
-    tags: ['белковый', 'удобно', 'омега-3'],
+    tags: ['белковый', 'удобно', 'омега-3', 'салаты'],
   },
   {
     id: 'mackerel-canned',
@@ -113,38 +91,15 @@ const products = [
     glycemicIndex: 0,
     insulinIndex: 59,
     storageInfo: {
-      canned: '2-3 года при комнатной температуре',
+      canned: '3 года при комнатной температуре',
       opened: '2-3 дня в холодильнике',
     },
     averagePrice: 120,
     allergens: ['рыба'],
     tags: ['жирная рыба', 'омега-3', 'удобно'],
   },
-  {
-    id: 'salmon',
-    name: 'Лосось',
-    category: 'fish',
-    unit: 'г',
-    nutrition: {
-      calories: 142,
-      protein: 19.8,
-      carbs: 0,
-      fat: 6.3,
-      fiber: 0,
-      sugar: 0,
-    },
-    glycemicIndex: 0,
-    insulinIndex: 59,
-    storageInfo: {
-      fresh: '1-2 дня в холодильнике',
-      frozen: '2-3 месяца в морозилке',
-    },
-    averagePrice: 800,
-    allergens: ['рыба'],
-    tags: ['премиум', 'омега-3', 'деликатес'],
-  },
 
-  // БЕЛКИ - Молочные продукты
+  // === БЕЛКИ - МОЛОЧНЫЕ ПРОДУКТЫ ===
   {
     id: 'cottage-cheese-0',
     name: 'Творог 0%',
@@ -166,7 +121,7 @@ const products = [
     },
     averagePrice: 120, // за 500г
     allergens: ['молоко'],
-    tags: ['белковый', 'диетический', 'кальций'],
+    tags: ['белковый', 'диетический', 'кальций', 'основа'],
   },
   {
     id: 'cottage-cheese-5',
@@ -189,30 +144,7 @@ const products = [
     },
     averagePrice: 130,
     allergens: ['молоко'],
-    tags: ['белковый', 'сытный', 'кальций'],
-  },
-  {
-    id: 'greek-yogurt',
-    name: 'Греческий йогурт 0%',
-    category: 'dairy',
-    unit: 'г',
-    nutrition: {
-      calories: 59,
-      protein: 10.3,
-      carbs: 4.0,
-      fat: 0.1,
-      fiber: 0,
-      sugar: 4.0,
-    },
-    glycemicIndex: 35,
-    insulinIndex: 115,
-    storageInfo: {
-      fresh: '7-10 дней в холодильнике',
-      frozen: 'не рекомендуется',
-    },
-    averagePrice: 80, // за 150г
-    allergens: ['молоко'],
-    tags: ['пробиотики', 'белковый', 'завтрак'],
+    tags: ['белковый', 'сытный', 'кальций', 'выпечка'],
   },
   {
     id: 'eggs',
@@ -220,12 +152,12 @@ const products = [
     category: 'dairy',
     unit: 'шт',
     nutrition: {
-      calories: 157, // на 100г (примерно 2 яйца)
-      protein: 12.7,
-      carbs: 0.7,
-      fat: 11.5,
+      calories: 78, // на 1 яйцо ~50г
+      protein: 6.3,
+      carbs: 0.4,
+      fat: 5.8,
       fiber: 0,
-      sugar: 0.7,
+      sugar: 0.4,
     },
     glycemicIndex: 0,
     insulinIndex: 31,
@@ -235,10 +167,10 @@ const products = [
     },
     averagePrice: 90, // за 10 шт
     allergens: ['яйца'],
-    tags: ['универсальный', 'белковый', 'завтрак'],
+    tags: ['универсальный', 'белковый', 'завтрак', 'выпечка'],
   },
 
-  // УГЛЕВОДЫ - Крупы и злаки
+  // === УГЛЕВОДЫ - КРУПЫ И ЗЛАКИ ===
   {
     id: 'oats-rolled',
     name: 'Овсянка',
@@ -260,7 +192,7 @@ const products = [
     },
     averagePrice: 80, // за кг
     allergens: ['глютен'],
-    tags: ['медленные углеводы', 'клетчатка', 'завтрак'],
+    tags: ['медленные углеводы', 'клетчатка', 'завтрак', 'основа'],
   },
   {
     id: 'oat-flour',
@@ -282,10 +214,10 @@ const products = [
     },
     averagePrice: 120,
     allergens: ['глютен'],
-    tags: ['выпечка', 'мука', 'клетчатка'],
+    tags: ['выпечка', 'мука', 'клетчатка', 'основа'],
   },
 
-  // УГЛЕВОДЫ - Бобовые
+  // === УГЛЕВОДЫ - БОБОВЫЕ ===
   {
     id: 'white-beans-canned',
     name: 'Фасоль белая в томате',
@@ -302,15 +234,15 @@ const products = [
     glycemicIndex: 35,
     insulinIndex: 120,
     storageInfo: {
-      canned: '2-3 года при комнатной температуре',
+      canned: '3 года при комнатной температуре',
       opened: '3-4 дня в холодильнике',
     },
     averagePrice: 60, // за банку 400г
     allergens: [],
-    tags: ['растительный белок', 'клетчатка', 'сытно'],
+    tags: ['растительный белок', 'клетчатка', 'сытно', 'гарнир'],
   },
 
-  // ОВОЩИ
+  // === ОВОЩИ ===
   {
     id: 'broccoli',
     name: 'Брокколи',
@@ -332,30 +264,7 @@ const products = [
     },
     averagePrice: 150, // за кг
     allergens: [],
-    tags: ['суперфуд', 'витамины', 'антиоксиданты'],
-  },
-  {
-    id: 'spinach',
-    name: 'Шпинат',
-    category: 'vegetables',
-    unit: 'г',
-    nutrition: {
-      calories: 22,
-      protein: 2.9,
-      carbs: 2.0,
-      fat: 0.4,
-      fiber: 2.2,
-      sugar: 0.4,
-    },
-    glycemicIndex: 15,
-    insulinIndex: 20,
-    storageInfo: {
-      fresh: '3-7 дней в холодильнике',
-      frozen: '10-12 месяцев в морозилке',
-    },
-    averagePrice: 200,
-    allergens: [],
-    tags: ['железо', 'витамины', 'зелень'],
+    tags: ['суперфуд', 'витамины', 'антиоксиданты', 'гарнир'],
   },
   {
     id: 'carrots',
@@ -378,7 +287,7 @@ const products = [
     },
     averagePrice: 50,
     allergens: [],
-    tags: ['бета-каротин', 'сладкий', 'универсальный'],
+    tags: ['бета-каротин', 'сладкий', 'универсальный', 'основа'],
   },
   {
     id: 'onions',
@@ -424,7 +333,7 @@ const products = [
     },
     averagePrice: 120,
     allergens: [],
-    tags: ['ликопин', 'сочный', 'салаты'],
+    tags: ['ликопин', 'сочный', 'салаты', 'свежий'],
   },
   {
     id: 'cucumbers',
@@ -446,10 +355,10 @@ const products = [
     },
     averagePrice: 80,
     allergens: [],
-    tags: ['освежающий', 'низкокалорийный', 'салаты'],
+    tags: ['освежающий', 'низкокалорийный', 'салаты', 'хрустящий'],
   },
 
-  // ФРУКТЫ
+  // === ФРУКТЫ ===
   {
     id: 'bananas',
     name: 'Бананы',
@@ -471,10 +380,10 @@ const products = [
     },
     averagePrice: 80, // за кг
     allergens: [],
-    tags: ['быстрые углеводы', 'калий', 'перекус'],
+    tags: ['быстрые углеводы', 'калий', 'перекус', 'энергия'],
   },
 
-  // ДОПОЛНИТЕЛЬНЫЕ ПРОДУКТЫ
+  // === ПРИПРАВЫ И СОУСЫ ===
   {
     id: 'tomato-paste',
     name: 'Томатная паста',
@@ -496,7 +405,148 @@ const products = [
     },
     averagePrice: 50, // за тубу 140г
     allergens: [],
-    tags: ['концентрированный', 'умами', 'основа'],
+    tags: ['концентрированный', 'умами', 'основа', 'соус'],
+  },
+  {
+    id: 'olive-oil',
+    name: 'Масло оливковое',
+    category: 'oils',
+    unit: 'мл',
+    nutrition: {
+      calories: 884,
+      protein: 0,
+      carbs: 0,
+      fat: 100,
+      fiber: 0,
+      sugar: 0,
+    },
+    glycemicIndex: 0,
+    insulinIndex: 0,
+    storageInfo: {
+      unopened: '2 года в темном месте',
+      opened: '6 месяцев в темном месте',
+    },
+    averagePrice: 300, // за 500мл
+    allergens: [],
+    tags: ['полезные жиры', 'средиземноморская диета', 'антиоксиданты'],
+  },
+
+  // === САХАРОЗАМЕНИТЕЛИ ===
+  {
+    id: 'erythritol',
+    name: 'Эритритол',
+    category: 'sweeteners',
+    unit: 'г',
+    nutrition: {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0,
+    },
+    glycemicIndex: 0,
+    insulinIndex: 0,
+    storageInfo: {
+      dry: '3 года в сухом месте',
+    },
+    averagePrice: 200, // за 500г
+    allergens: [],
+    tags: ['сахарозаменитель', 'диабетический', 'выпечка', 'безопасный'],
+  },
+
+  // === СПЕЦИИ И ТРАВЫ ===
+  {
+    id: 'salt',
+    name: 'Соль морская',
+    category: 'spices',
+    unit: 'г',
+    nutrition: {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0,
+    },
+    glycemicIndex: 0,
+    insulinIndex: 0,
+    storageInfo: {
+      dry: 'неограниченно в сухом месте',
+    },
+    averagePrice: 30, // за 500г
+    allergens: [],
+    tags: ['основа', 'минералы', 'консервант'],
+  },
+  {
+    id: 'black-pepper',
+    name: 'Перец черный молотый',
+    category: 'spices',
+    unit: 'г',
+    nutrition: {
+      calories: 251,
+      protein: 10.4,
+      carbs: 38.3,
+      fat: 3.3,
+      fiber: 26.5,
+      sugar: 0.6,
+    },
+    glycemicIndex: 0,
+    insulinIndex: 0,
+    storageInfo: {
+      dry: '2-3 года в сухом месте',
+    },
+    averagePrice: 150, // за 100г
+    allergens: [],
+    tags: ['специя', 'антиоксиданты', 'пищеварение'],
+  },
+
+  // === НАПИТКИ ===
+  {
+    id: 'coffee-beans',
+    name: 'Кофе в зернах',
+    category: 'beverages',
+    unit: 'г',
+    nutrition: {
+      calories: 1, // на чашку
+      protein: 0.1,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0,
+    },
+    glycemicIndex: 0,
+    insulinIndex: 0,
+    storageInfo: {
+      beans: '1 год в сухом месте',
+      ground: '2 недели в холодильнике',
+    },
+    averagePrice: 800, // за кг
+    allergens: [],
+    tags: ['энергия', 'антиоксиданты', 'утро', 'бодрость'],
+  },
+  {
+    id: 'bombbar-isotonic',
+    name: 'Bombbar изотоник',
+    category: 'beverages',
+    unit: 'мл',
+    nutrition: {
+      calories: 12, // на 100мл
+      protein: 0,
+      carbs: 3.0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0, // сахарозаменители
+    },
+    glycemicIndex: 0,
+    insulinIndex: 0,
+    storageInfo: {
+      unopened: '1 год при комнатной температуре',
+      opened: '3 дня в холодильнике',
+    },
+    averagePrice: 80, // за 500мл
+    allergens: [],
+    tags: ['изотоник', 'электролиты', 'тренировки', 'гидратация'],
   },
 ];
 
@@ -527,6 +577,10 @@ class ProductsDatabase {
     );
   }
 
+  static getMealPrepProducts() {
+    return products.filter(product => product.tags.includes('meal-prep'));
+  }
+
   static getCategories() {
     const categories = [...new Set(products.map(product => product.category))];
     return categories.map(category => ({
@@ -546,8 +600,32 @@ class ProductsDatabase {
       vegetables: 'Овощи',
       fruits: 'Фрукты',
       condiments: 'Приправы и соусы',
+      oils: 'Масла',
+      sweeteners: 'Сахарозаменители',
+      spices: 'Специи и травы',
+      beverages: 'Напитки',
     };
     return names[category] || category;
+  }
+
+  // Специальные методы для вашего меню
+  static getBreakfastProducts() {
+    return products.filter(product => 
+      product.tags.includes('завтрак') || 
+      ['cottage-cheese-0', 'cottage-cheese-5', 'oat-flour', 'eggs', 'coffee-beans'].includes(product.id)
+    );
+  }
+
+  static getSoupProducts() {
+    return products.filter(product => 
+      ['chicken-fillet', 'carrots', 'onions', 'broccoli', 'white-beans-canned'].includes(product.id)
+    );
+  }
+
+  static getSaladProducts() {
+    return products.filter(product => 
+      ['tuna-canned', 'cucumbers', 'tomatoes', 'onions', 'olive-oil'].includes(product.id)
+    );
   }
 }
 

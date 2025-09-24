@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+
+// components/nutrition/RecipeDetailScreen.js
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,14 +8,116 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
+  Vibration,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/colors';
 
 const RecipeDetailScreen = ({ route, navigation }) => {
   const { recipe } = route.params;
-  const [activeTab, setActiveTab] = useState('ingredients');
+  const [activeTab, setActiveTab] = useState('instructions');
   const [servings, setServings] = useState(recipe.servings);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [timers, setTimers] = useState({});
+
+  // Инициализация таймеров
+  useEffect(() => {
+    const initialTimers = {};
+    recipe.instructions.forEach((instruction, index) => {
+      if (instruction.timer) {
+        initialTimers[index] = {
+          duration: instruction.timer * 60,
+          remaining: instruction.timer * 60,
+          isRunning: false,
+          isCompleted: false,
+        };
+      }
+    });
+    setTimers(initialTimers);
+  }, [recipe]);
+
+  // Обновление таймеров
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimers(prevTimers => {
+        const newTimers = { ...prevTimers };
+        let hasChanges = false;
+
+        Object.keys(newTimers).forEach(stepIndex => {
+          const timer = newTimers[stepIndex];
+          if (timer.isRunning && timer.remaining > 0) {
+            timer.remaining -= 1;
+            hasChanges = true;
+
+            if (timer.remaining === 0) {
+              timer.isRunning = false;
+              timer.isCompleted = true;
+              showCompletionAlert(stepIndex);
+              Vibration.vibrate([0, 500, 200, 500]);
+            }
+          }
+        });
+
+        return hasChanges ? newTimers : prevTimers;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const showCompletionAlert = (stepIndex) => {
+    const step = recipe.instructions[stepIndex];
+    Alert.alert(
+      '⏰ Таймер завершен!',
+      `Шаг ${parseInt(stepIndex) + 1}: ${step.text}`,
+      [
+        { text: 'Понятно', style: 'default' },
+        {
+          text: 'Следующий шаг',
+          style: 'default',
+          onPress: () => {
+            if (currentStep < recipe.instructions.length - 1) {
+              setCurrentStep(currentStep + 1);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const startTimer = (stepIndex) => {
+    setTimers(prev => ({
+      ...prev,
+      [stepIndex]: { ...prev[stepIndex], isRunning: true }
+    }));
+  };
+
+  const pauseTimer = (stepIndex) => {
+    setTimers(prev => ({
+      ...prev,
+      [stepIndex]: { ...prev[stepIndex], isRunning: false }
+    }));
+  };
+
+  const resetTimer = (stepIndex) => {
+    const instruction = recipe.instructions[stepIndex];
+    setTimers(prev => ({
+      ...prev,
+      [stepIndex]: {
+        duration: instruction.timer * 60,
+        remaining: instruction.timer * 60,
+        isRunning: false,
+        isCompleted: false,
+      }
+    }));
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const adjustQuantity = (originalQuantity, originalServings, newServings) => {
     const ratio = newServings / originalServings;
@@ -21,31 +125,114 @@ const RecipeDetailScreen = ({ route, navigation }) => {
     return adjusted % 1 === 0 ? adjusted.toString() : adjusted.toFixed(1);
   };
 
-  const renderNutritionInfo = () => (
-    <View style={styles.nutritionGrid}>
-      <View style={styles.nutritionItem}>
-        <Text style={styles.nutritionValue}>
-          {Math.round(recipe.nutrition.calories * servings / recipe.servings)}
+  const renderInstructions = () => (
+    <View style={styles.tabContent}>
+      {recipe.instructions.map((step, index) => {
+        const timer = timers[index];
+        const isCurrentStep = index === currentStep;
+        
+        return (
+          <View key={index} style={[
+            styles.instructionStep,
+            isCurrentStep && styles.currentStep
+          ]}>
+            <View style={[
+              styles.stepNumber,
+              isCurrentStep && styles.currentStepNumber
+            ]}>
+              <Text style={[
+                styles.stepNumberText,
+                isCurrentStep && styles.currentStepNumberText
+              ]}>
+                {step.step || index + 1}
+              </Text>
+            </View>
+            
+            <View style={styles.stepContent}>
+              <Text style={[
+                styles.stepText,
+                isCurrentStep && styles.currentStepText
+              ]}>
+                {step.text}
+              </Text>
+              
+              {timer && (
+                <View style={styles.timerContainer}>
+                  <View style={styles.timerDisplay}>
+                    <Ionicons 
+                      name="timer-outline" 
+                      size={20} 
+                      color={timer.isCompleted ? COLORS.success : COLORS.primary} 
+                    />
+                    <Text style={[
+                      styles.timerText,
+                      timer.isCompleted && styles.timerCompleted
+                    ]}>
+                      {formatTime(timer.remaining)}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.timerControls}>
+                    {!timer.isRunning && !timer.isCompleted && (
+                      <TouchableOpacity
+                        style={styles.timerButton}
+                        onPress={() => startTimer(index)}
+                      >
+                        <Ionicons name="play" size={16} color={COLORS.surface} />
+                      </TouchableOpacity>
+                    )}
+                    
+                    {timer.isRunning && (
+                      <TouchableOpacity
+                        style={[styles.timerButton, styles.pauseButton]}
+                        onPress={() => pauseTimer(index)}
+                      >
+                        <Ionicons name="pause" size={16} color={COLORS.surface} />
+                      </TouchableOpacity>
+                    )}
+                    
+                    <TouchableOpacity
+                      style={[styles.timerButton, styles.resetButton]}
+                      onPress={() => resetTimer(index)}
+                    >
+                      <Ionicons name="refresh" size={16} color={COLORS.surface} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        );
+      })}
+      
+      <View style={styles.stepNavigation}>
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            currentStep === 0 && styles.navButtonDisabled
+          ]}
+          onPress={() => setCurrentStep(Math.max(0, currentStep - 1))}
+          disabled={currentStep === 0}
+        >
+          <Ionicons name="chevron-back" size={20} color={COLORS.primary} />
+          <Text style={styles.navButtonText}>Назад</Text>
+        </TouchableOpacity>
+        
+        <Text style={styles.stepCounter}>
+          {currentStep + 1} из {recipe.instructions.length}
         </Text>
-        <Text style={styles.nutritionLabel}>ккал</Text>
-      </View>
-      <View style={styles.nutritionItem}>
-        <Text style={styles.nutritionValue}>
-          {Math.round(recipe.nutrition.protein * servings / recipe.servings)}г
-        </Text>
-        <Text style={styles.nutritionLabel}>белки</Text>
-      </View>
-      <View style={styles.nutritionItem}>
-        <Text style={styles.nutritionValue}>
-          {Math.round(recipe.nutrition.carbs * servings / recipe.servings)}г
-        </Text>
-        <Text style={styles.nutritionLabel}>углеводы</Text>
-      </View>
-      <View style={styles.nutritionItem}>
-        <Text style={styles.nutritionValue}>
-          {Math.round(recipe.nutrition.fat * servings / recipe.servings)}г
-        </Text>
-        <Text style={styles.nutritionLabel}>жиры</Text>
+        
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            currentStep === recipe.instructions.length - 1 && styles.navButtonDisabled
+          ]}
+          onPress={() => setCurrentStep(Math.min(recipe.instructions.length - 1, currentStep + 1))}
+          disabled={currentStep === recipe.instructions.length - 1}
+        >
+          <Text style={styles.navButtonText}>Далее</Text>
+          <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -58,27 +245,6 @@ const RecipeDetailScreen = ({ route, navigation }) => {
           <Text style={styles.ingredientQuantity}>
             {adjustQuantity(ingredient.quantity, recipe.servings, servings)} {ingredient.unit}
           </Text>
-        </View>
-      ))}
-    </View>
-  );
-
-  const renderInstructions = () => (
-    <View style={styles.tabContent}>
-      {recipe.instructions.map((step, index) => (
-        <View key={index} style={styles.instructionStep}>
-          <View style={styles.stepNumber}>
-            <Text style={styles.stepNumberText}>{index + 1}</Text>
-          </View>
-          <View style={styles.stepContent}>
-            <Text style={styles.stepText}>{step.text}</Text>
-            {step.timer && (
-              <View style={styles.timerContainer}>
-                <Ionicons name="timer-outline" size={16} color={COLORS.primary} />
-                <Text style={styles.timerText}>{step.timer} мин</Text>
-              </View>
-            )}
-          </View>
         </View>
       ))}
     </View>
@@ -97,7 +263,6 @@ const RecipeDetailScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -112,12 +277,10 @@ const RecipeDetailScreen = ({ route, navigation }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Recipe Image Placeholder */}
         <View style={styles.imageContainer}>
           <Ionicons name="image-outline" size={80} color={COLORS.textSecondary} />
         </View>
 
-        {/* Recipe Info */}
         <View style={styles.infoSection}>
           <Text style={styles.recipeDescription}>{recipe.description}</Text>
           
@@ -135,13 +298,10 @@ const RecipeDetailScreen = ({ route, navigation }) => {
             </View>
             <View style={styles.statItem}>
               <Ionicons name="cash-outline" size={20} color={COLORS.primary} />
-              <Text style={styles.statText}>
-                {Math.round(recipe.cost * servings / recipe.servings)} ₽
-              </Text>
+              <Text style={styles.statText}>{recipe.cost} ₽</Text>
             </View>
           </View>
 
-          {/* Servings Adjuster */}
           <View style={styles.servingsContainer}>
             <Text style={styles.servingsLabel}>Порций:</Text>
             <View style={styles.servingsControls}>
@@ -161,16 +321,39 @@ const RecipeDetailScreen = ({ route, navigation }) => {
             </View>
           </View>
 
-          {/* Nutrition Info */}
-          {renderNutritionInfo()}
+          <View style={styles.nutritionGrid}>
+            <View style={styles.nutritionItem}>
+              <Text style={styles.nutritionValue}>
+                {Math.round(recipe.nutrition.calories * servings / recipe.servings)}
+              </Text>
+              <Text style={styles.nutritionLabel}>ккал</Text>
+            </View>
+            <View style={styles.nutritionItem}>
+              <Text style={styles.nutritionValue}>
+                {Math.round(recipe.nutrition.protein * servings / recipe.servings)}г
+              </Text>
+              <Text style={styles.nutritionLabel}>белки</Text>
+            </View>
+            <View style={styles.nutritionItem}>
+              <Text style={styles.nutritionValue}>
+                {Math.round(recipe.nutrition.carbs * servings / recipe.servings)}г
+              </Text>
+              <Text style={styles.nutritionLabel}>углеводы</Text>
+            </View>
+            <View style={styles.nutritionItem}>
+              <Text style={styles.nutritionValue}>
+                {Math.round(recipe.nutrition.fat * servings / recipe.servings)}г
+              </Text>
+              <Text style={styles.nutritionLabel}>жиры</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Tabs */}
         <View style={styles.tabsContainer}>
           <View style={styles.tabsHeader}>
             {[
-              { id: 'ingredients', label: 'Ингредиенты', icon: 'list-outline' },
-              { id: 'instructions', label: 'Приготовление', icon: 'document-text-outline' },
+              { id: 'instructions', label: 'Приготовление', icon: 'list-outline' },
+              { id: 'ingredients', label: 'Ингредиенты', icon: 'restaurant-outline' },
               { id: 'equipment', label: 'Оборудование', icon: 'hardware-chip-outline' },
             ].map((tab) => (
               <TouchableOpacity
@@ -196,20 +379,21 @@ const RecipeDetailScreen = ({ route, navigation }) => {
             ))}
           </View>
 
-          {/* Tab Content */}
-          {activeTab === 'ingredients' && renderIngredients()}
           {activeTab === 'instructions' && renderInstructions()}
+          {activeTab === 'ingredients' && renderIngredients()}
           {activeTab === 'equipment' && renderEquipment()}
         </View>
       </ScrollView>
 
-      {/* Action Buttons */}
       <View style={styles.actionButtons}>
         <TouchableOpacity style={styles.addToCartButton}>
           <Ionicons name="basket-outline" size={20} color={COLORS.surface} />
           <Text style={styles.addToCartText}>В корзину</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.startCookingButton}>
+        <TouchableOpacity 
+          style={styles.startCookingButton}
+          onPress={() => setActiveTab('instructions')}
+        >
           <Ionicons name="play-outline" size={20} color={COLORS.surface} />
           <Text style={styles.startCookingText}>Готовить</Text>
         </TouchableOpacity>
@@ -389,19 +573,32 @@ const styles = StyleSheet.create({
   instructionStep: {
     flexDirection: 'row',
     marginBottom: 20,
+    padding: 12,
+    borderRadius: 8,
+  },
+  currentStep: {
+    backgroundColor: COLORS.background,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
   },
   stepNumber: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.textSecondary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
   },
+  currentStepNumber: {
+    backgroundColor: COLORS.primary,
+  },
   stepNumberText: {
     fontSize: 16,
     fontWeight: '600',
+    color: COLORS.surface,
+  },
+  currentStepNumberText: {
     color: COLORS.surface,
   },
   stepContent: {
@@ -412,15 +609,79 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     lineHeight: 24,
   },
+  currentStepText: {
+    fontWeight: '500',
+    color: COLORS.text,
+  },
   timerContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  timerDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginBottom: 8,
   },
   timerText: {
-    fontSize: 14,
+    fontSize: 18,
+    fontWeight: '600',
     color: COLORS.primary,
-    marginLeft: 4,
+    marginLeft: 8,
+  },
+  timerCompleted: {
+    color: COLORS.success,
+  },
+  timerControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  timerButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pauseButton: {
+    backgroundColor: COLORS.warning,
+  },
+  resetButton: {
+    backgroundColor: COLORS.textSecondary,
+  },
+  stepNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: COLORS.background,
+  },
+  navButtonDisabled: {
+    opacity: 0.5,
+  },
+  navButtonText: {
+    fontSize: 16,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
+  stepCounter: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
     fontWeight: '500',
   },
   equipmentItem: {

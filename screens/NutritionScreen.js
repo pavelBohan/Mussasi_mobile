@@ -17,23 +17,24 @@ const NutritionScreen = () => {
   const [activeTab, setActiveTab] = useState('meals');
 
   const tabs = [
-    { id: 'meals', label: 'Приемы пищи', icon: 'restaurant-outline' },
-    { id: 'recipes', label: 'Рецепты', icon: 'book-outline' },
-    { id: 'shopping', label: 'Корзина', icon: 'basket-outline' },
+  { id: 'meals', label: 'Приемы пищи', icon: 'restaurant-outline' },
+  { id: 'recipes', label: 'Рецепты', icon: 'book-outline' },
+  { id: 'shopping', label: 'Корзина', icon: 'basket-outline' },
   ];
 
   const renderTabContent = () => {
-    switch (activeTab) {
-      case 'meals':
-        return <MealsTab />;
-      case 'recipes':
-        return <RecipesTab />;
-      case 'shopping':
-        return <ShoppingTab />;
-      default:
-        return <MealsTab />;
-    }
+  switch (activeTab) {
+  case 'meals':
+  return <MealsTab navigation={navigation} />;
+  case 'recipes':
+  return <RecipesTab navigation={navigation} />;
+  case 'shopping':
+  return <ShoppingTab navigation={navigation} />;
+  default:
+  return <MealsTab navigation={navigation} />;
+  }
   };
+
 
   return (
     <SafeAreaView style={styles.container}>

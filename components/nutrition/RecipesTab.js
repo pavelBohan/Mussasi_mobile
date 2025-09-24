@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -161,21 +160,21 @@ const RecipesTab = ({ navigation }) => {
   const handleRecipePress = (recipe) => {
     // Анимация нажатия
     Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 0.7,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(fadeAnim, {
+    toValue: 0.7,
+    duration: 100,
+    useNativeDriver: true,
+    }),
+    Animated.timing(fadeAnim, {
+    toValue: 1,
+    duration: 100,
+    useNativeDriver: true,
+    }),
+  ]).start();
 
-    // Здесь будет навигация к детальному экрану
-    console.log('Recipe pressed:', recipe.name);
-  };
+// Навигация к детальному экрану
+navigation.navigate('RecipeDetail', { recipe });
+};
 
   const renderCategory = ({ item }) => {
     const isActive = selectedCategory === item.id;
